@@ -17,6 +17,7 @@ private:
 
     float gyroRates[10];
     int ringBufferIndex;
+    float driftOffset = 0.86;
 
     long oldMillis;
     long newMillis;
