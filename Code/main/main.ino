@@ -7,9 +7,11 @@
 #include "IRSensor.h"
 #include "SonarSensor.h"
 #include "PID_v1.h"
+#include "Phototransistors.h"
 
 #define WALL_FOLLOW_DISTANCE 145
 #define WALL_STOP_DISTANCE 40
+
 
 // pidIn is the position array input to the PID controllers
 double pidIn[3];
@@ -27,6 +29,15 @@ PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 130, 420, 27, REVERSE);
 void setup()
 {
   Serial.begin(9600);
+  Phototransistors pt(A9, A10, A8, A8);
+  pinMode(12, OUTPUT);
+  while(1){
+    if(pt.FireDetected()){
+      digitalWrite(12, HIGH);
+     } else{
+      digitalWrite(12, LOW);
+     }
+  }
 
   /* These prevent Intergrator windup by stoping the intergrator summing
   if the output goes outside of the range specified below. */
@@ -93,6 +104,7 @@ void setup()
 
   // Flag for finished course
   int isDone = 0;
+  
   // Super Loop
   while (1)
   {

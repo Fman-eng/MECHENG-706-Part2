@@ -1,0 +1,9 @@
+Sonar 48 (trig) 49(echo)
+Rear_PT = A10
+Front_PT = A9
+Ambient_PT = A8
+Rear_Right_IR A14
+Front_Right_IR A15
+Front_OS A13
+Rear_OS A12
+Fan 12
