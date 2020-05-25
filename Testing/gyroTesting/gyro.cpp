@@ -36,7 +36,7 @@ float gyro::gyroUpdate(){
 
     gyroRate /= _sensitivity;
 
-    currentAngle += gyroRate/1000000*(newMillis-oldMillis);
+    currentAngle += (gyroRate+driftOffset)/1000000*(newMillis-oldMillis);
     
 
     ringBufferIndex = (ringBufferIndex + 1)%10;
