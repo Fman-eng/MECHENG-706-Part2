@@ -12,6 +12,15 @@
 #define WALL_FOLLOW_DISTANCE 145
 #define WALL_STOP_DISTANCE 40
 
+enum State{
+  Initalize,
+  WallFollow,
+  FireCheck,
+  FireApproch,
+  FireExtinguish,
+  WallReturn,
+  Turning
+};
 
 // pidIn is the position array input to the PID controllers
 double pidIn[3];
