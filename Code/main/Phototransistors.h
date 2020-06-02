@@ -14,7 +14,7 @@ class Phototransistors
 {
 public:
   Phototransistors(uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4); // Constructor for this class
-  bool FireDetected();
+  bool FireDetected(int threshold);
   int ptDetectionThreshold = 950;
   int ptDeviationThreshold = 100;
 
