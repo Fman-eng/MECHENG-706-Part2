@@ -33,21 +33,14 @@ double setPoints[3];
 
 // Setup PID controller instances
 PID PIDVx(&pidIn[0], &pidOut[0], &setPoints[0], 200, 0, 0, REVERSE);
-PID PIDVy(&pidIn[1], &pidOut[1], &setPoints[1], 170, 483, 40, REVERSE);
-PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 130, 420, 27, REVERSE);
+PID PIDVy(&pidIn[1], &pidOut[1], &setPoints[1], 170, 483, 0, REVERSE);
+PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 130, 420, 0, REVERSE);
 
 void setup()
 {
   Serial.begin(9600);
   Phototransistors pt(A9, A10, A8, A8);
   pinMode(12, OUTPUT);
-  while(1){
-    if(pt.FireDetected()){
-      digitalWrite(12, HIGH);
-     } else{
-      digitalWrite(12, LOW);
-     }
-  }
 
   /* These prevent Intergrator windup by stoping the intergrator summing
   if the output goes outside of the range specified below. */
@@ -71,8 +64,10 @@ void setup()
   }
 
   // Sensor Instantiation
-  IRSensor IRFront(A14, true);
-  IRSensor IRBack(A15, false);
+  IRSensor IRFront(A9, true);
+  IRSensor IRBack(A10, false);
+  IRSensor IRFrontOS(A14, true);
+  IRSensor IRBackOS(A15, false);
   SonarSensor sonar(48, 49);
 
   // Intstantiated the Controller
@@ -119,6 +114,44 @@ void setup()
   State state = INITALIZE;
 
   float sonarDist;
+
+  int sensorDiff=0, sensorAvg=0, detectionThreshold=100, distToWall=1500, stopDist=50;
+//  while((sensorAvg < stopDist) & (sensorDiff < detectionThreshold)){
+  while(1){
+  PIDVx.SetMode(AUTOMATIC);
+  PIDVy.SetMode(AUTOMATIC);
+  PIDW.SetMode(AUTOMATIC);
+    // Detect an obstical
+    //Serial.println(abs(IRFront.getDistance()-IRBack.getDistance()));
+    Serial.print(IRFrontOS.getDistance());
+    Serial.print(",");
+    Serial.println(IRBack.getDistance());
+    sensorDiff = abs(IRFrontOS.getDistance()-IRBack.getDistance());
+    sensorAvg = (IRFrontOS.getDistance()-IRBack.getDistance())/2;
+    pidIn[0] = 0;
+    pidIn[1] = -5;
+    pidIn[2] = 0;
+    if((sensorDiff < detectionThreshold) & sensorAvg < distToWall){
+      //drive forward
+      Serial.println("Obstical Detected!");
+    }
+    else if((IRFrontOS.getDistance()-IRBack.getDistance()) > detectionThreshold){
+      Serial.println("Drive 1"); 
+      pidIn[0] = 2;
+    } else if((IRBack.getDistance()-IRFrontOS.getDistance()) > detectionThreshold){
+      // drive xx
+      Serial.println("Drive 2");
+      pidIn[0] = -2;
+    } else if (sensorDiff < detectionThreshold & sensorAvg > distToWall){
+      Serial.println("Lost obstical");
+      pidIn[0] = 0;
+    }
+    PIDVx.Compute();
+    PIDVy.Compute();
+    PIDW.Compute();
+    drive.SetSpeedThroughKinematic(pidOut[0], pidOut[1], pidOut[2]);
+    delay(50);
+  }
 
   // Super Loop
   while (1)
