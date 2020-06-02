@@ -19,12 +19,12 @@ public:
 
 private:
   uint8_t _pin;                                                    //Pin number assigned to the sensor
-  int sensor;                                                 //Is this sensor1 or sensor2 (written on bottom of sensor module)
+  int _sensor;                                                 //Is this sensor1 or sensor2 (written on bottom of sensor module)
   int sensorReadings[5];  
-  sensorCoefficients = {909, -0.02958, 282.9, -0.003827;
-                        898.9, -0.0263, 246.8, -0.003013;
-                        1065, -0.1442, 284.7, -0.01242;
-                        948.5, -0.1262, 250.4,  -0.01015};                                       //Buffer to hold five sensor readings
+  float sensorCoefficients[4][4] = {{909, -0.02958, 282.9, -0.003827},
+                        {898.9, -0.0263, 246.8, -0.003013},
+                        {1065, -0.1442, 284.7, -0.01242},
+                        {948.5, -0.1262, 250.4,  -0.01015}};                                       //Buffer to hold five sensor readings
   //float sensorOneCoeffs[4] = {909, -0.02958, 282.9, -0.003827};    //Sensor1 model coefficients
   //float sensorTwoCoeffs[4] = {898.9, -0.0263, 246.8, -0.003013};   //Sensor2 model coefficients
   //float sensorThreeCoeffs[4] = {1065, -0.1442, 284.7, -0.01242};   //Sensor3 model coefficients
