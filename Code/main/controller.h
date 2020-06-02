@@ -21,7 +21,7 @@ public:
   void FrontDetect(double sonar, double targetDistance, double out[3]);
   void GapScan(double Range[360], int angle, double distance);
   void GapFill(double Range[360]);
-  int GapDetech(double Range[720]);
+  int GapDetect(double Range[720]);
 
 };
 #endif
