@@ -23,17 +23,23 @@ Phototransistors::Phototransistors(uint8_t pin1, uint8_t pin2, uint8_t pin3, uin
     this->ptPin2Ambient = pin4;
 }
 
-bool Phototransistors::FireDetected(){
-  int offset = 50;
-  int ambientReading = (analogRead(this->ptPin1Ambient) + analogRead(this->ptPin2Ambient)/2);
-  int activeReading1 = analogRead(this->ptPin1Active);
-  int activeReading2 = analogRead(this->ptPin2Active);
-  delay(50);
+bool Phototransistors::FireDetected(int threshold){
+  int activeReading1 = 0;
+  int activeReading2 = 0;
+
+  for(int i = 0; i < 10; i++){
+    activeReading1 += analogRead(this->ptPin1Active);
+    activeReading2 += analogRead(this->ptPin2Active);
+  }
+  
+  activeReading1 = activeReading1/10;
+  activeReading2 = activeReading2/10;
+  
+  int offset = 0;
+  
   Serial.print(activeReading1+offset);
   Serial.print(',');
   Serial.println(activeReading2);
-  //Serial.print(',');
-  //Serial.println(ambientReading);
 
   if((activeReading1 > ptDetectionThreshold) && (abs(activeReading1-activeReading2) < ptDeviationThreshold)){
     return true;
