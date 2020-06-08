@@ -15,10 +15,10 @@
  * sets the pin direction on the arduino. Also takes a boolean value to distinguish the model values, true uses
  * calibration values of sensor one, false uses calibration values for sensor two.
  */
-IRSensor::IRSensor(uint8_t pin, bool sensorOne)
+IRSensor::IRSensor(uint8_t pin, int sensor)
 {
     _pin = pin;
-    _sensorOne = sensorOne;
+    _sensor = sensor;
     pinMode(pin, INPUT);
 }
 
@@ -42,14 +42,8 @@ int IRSensor::getDistance()
     averageSensorReading = sum / 5;
 
     // Use the correct sensor calibration values to calculate the distance from the average sensor readings
-    if (_sensorOne == true)
-    {
-        calculatedDistance = sensorOneCoeffs[0] * exp(sensorOneCoeffs[1] * averageSensorReading) + sensorOneCoeffs[2] * exp(sensorOneCoeffs[3] * averageSensorReading);
-    }
-    else if (_sensorOne == false)
-    {
-        calculatedDistance = sensorTwoCoeffs[0] * exp(sensorTwoCoeffs[1] * averageSensorReading) + sensorTwoCoeffs[2] * exp(sensorTwoCoeffs[3] * averageSensorReading);
-    }
+    calculatedDistance = sensorCoefficients[_sensor,0] * exp(sensorCoefficients[_sensor,1] * averageSensorReading) + sensorCoefficients[_sensor,2] * exp(sensorCoefficients[_sensor,3] * averageSensorReading);
+   
 
     // Return the calculated distance
     return calculatedDistance;
