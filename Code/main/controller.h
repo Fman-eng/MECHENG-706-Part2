@@ -22,6 +22,7 @@ public:
   void GapScan(double Range[360], int angle, double distance);
   void GapFill(double Range[360]);
   int GapDetect(double Range[720]);
+  void GyroTurn(double, double, double*);
 
 };
 #endif
