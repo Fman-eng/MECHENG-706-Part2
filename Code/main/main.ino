@@ -41,13 +41,6 @@ void setup()
   Serial.begin(9600);
   Phototransistors pt(A9, A10, A8, A8);
   pinMode(12, OUTPUT);
-  while(1){
-    if(pt.FireDetected()){
-      digitalWrite(12, HIGH);
-     } else{
-      digitalWrite(12, LOW);
-     }
-  }
 
   /* These prevent Intergrator windup by stoping the intergrator summing
   if the output goes outside of the range specified below. */
