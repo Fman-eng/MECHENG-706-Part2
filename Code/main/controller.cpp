@@ -56,6 +56,22 @@ void Controller::WallFollow(double frontIR, double backIR, double targetDistance
 }
 
 /**
+ * Drive the robot forward parrallel to a wall
+ * 
+ * This function reads the side-mounted IR sensor and calculates
+ * the appropriate (y and omega) PID output values needed to A) 
+ * drive a set (15cm) distance from a surface and B) correct
+ *  any deviations from being parrallel from that surface.
+ */
+void Controller::GyroTurn(double gyroAngle, double targetAngle, double out[3])
+{
+  float l_IR = 185; //Distance between IR sensors
+  out[2] = targetAngle - gyroAngle;
+  return;
+}
+
+
+/**
  * Detect obstacles ahead and adjust x PID effort accordingly 
  * 
  * This function reads the side-mounted IR sensor and calculates
