@@ -14,16 +14,17 @@ class IRSensor
 {
 public:
   IRSensor(uint8_t pin, int sensor); // Constructor for this class
-  int getDistance();                 // This function returns the distance to the wall in mm
+  float getDistance();                 // This function returns the distance to the wall in mm
   int getSensorReading();            // This function returns one raw sensor reading
+  float getAverage();
 
 private:
   uint8_t _pin; //Pin number assigned to the sensor
   float IRValues[5];
-  float IRAvg;
+  int firItr;
   int _sensor;  //Is this sensor1 or sensor2 (written on bottom of sensor module)
   int sensorReadings[5];
-  float getAverage(int firItr);
+  
   float sensorCoefficients[4][4] = {{909, -0.02958, 282.9, -0.003827},
                                     {898.9, -0.0263, 246.8, -0.003013},
                                     {1065, -0.1442, 284.7, -0.01242},

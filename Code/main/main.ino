@@ -33,8 +33,8 @@ double setPoints[3];
 
 // Setup PID controller instances
 PID PIDVx(&pidIn[0], &pidOut[0], &setPoints[0], 200, 0, 0, REVERSE);
-PID PIDVy(&pidIn[1], &pidOut[1], &setPoints[1], 170, 483, 40, REVERSE);
-PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 130, 420, 27, REVERSE);
+PID PIDVy(&pidIn[1], &pidOut[1], &setPoints[1], 300, 0, 0, REVERSE);
+PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 300, 0, 0, REVERSE);
 
 void setup()
 {
@@ -64,10 +64,10 @@ void setup()
   }
 
   // Sensor Instantiation
-  IRSensor IRFront(A14, true);
-  IRSensor IRBack(A15, false);
-  IRSensor OIRFront(A13, true);
-  IRSensor OIRBack(A12, false);
+  IRSensor IRFront(A15, 0);
+  IRSensor IRBack(A14, 2);
+  IRSensor OIRFront(A13, 3);
+  IRSensor OIRBack(A12, 1);
   SonarSensor sonar(48, 49);
 
   // Init averaged sensor values
@@ -102,7 +102,7 @@ void setup()
   int isDone = 0;
   
   // state machine
-  State state = INITALIZE;
+  State state = WALLFOLLOW;
 
   float sonarDist;
 
@@ -110,13 +110,22 @@ void setup()
   while (1)
   {
 
-    /* Use a shift register to store the previous values of the IR sensors
-    to apply a fourth order FIR filter, this prevents noise interfering
-    with the derivative terms of the PID controllers. firItr iterates
-    through each value in the arrays and updates them with the new
-    values from the sensors. The arrays are then averaged bfore being
-    input into the controller*/
+    frontAvg = IRFront.getAverage();
+    rearAvg = IRBack.getAverage();
+    obsFrontAvg = OIRFront.getAverage(); 
+    obsRearAvg = OIRBack.getAverage();
 
+    Serial.println("\nSide IR's (front, rear):");
+    Serial.print(frontAvg);
+    Serial.print(", ");
+    Serial.println(rearAvg);
+    Serial.println("\nObstical IR's (front, rear):");
+    Serial.print(obsFrontAvg);
+    Serial.print(", ");
+    Serial.println(obsRearAvg);
+    Serial.println("\nSonar");
+    Serial.println(sonar.getDistance());
+    delay(100);
 
     switch(state){
       case INITALIZE:

@@ -17,6 +17,7 @@
  */
 IRSensor::IRSensor(uint8_t pin, int sensor)
 {
+    firItr = 0;
     _pin = pin;
     _sensor = sensor;
     pinMode(pin, INPUT);
@@ -33,7 +34,7 @@ IRSensor::IRSensor(uint8_t pin, int sensor)
  * value of five sensor readings as a simple method to slightly reduce noise. This function uses a two-term exponential
  * model to calculate the sensor readings
  */
-int IRSensor::getDistance()
+float IRSensor::getDistance()
 {
     // Take five readings from the sensor and average them
     sum = 0;
@@ -53,16 +54,24 @@ int IRSensor::getDistance()
     return calculatedDistance;
 }
 
-float IRSensor::getAverage(int firItr)
+/* Use a shift register to store the previous values of the IR sensors
+    to apply a fourth order FIR filter, this prevents noise interfering
+    with the derivative terms of the PID controllers. firItr iterates
+    through each value in the arrays and updates them with the new
+    values from the sensors. The arrays are then averaged bfore being
+    input into the controller*/
+float IRSensor::getAverage()
 {
+    //return getDistance();
     firItr = (firItr + 1) % 5;
     IRValues[firItr] = getDistance();
+    float IRAvg = 0;
     for (int i = 0; i < 5; i++)
     {
       IRAvg += IRValues[i];
     }
-    IRAvg = IRAvg / 5;
-    return IRAvg;
+    Serial.println("");
+    return (IRAvg / 5);
 }
 
 // getSensorReading takes no input arguments and returns the raw output of a single sensor
