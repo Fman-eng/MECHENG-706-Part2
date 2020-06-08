@@ -66,6 +66,8 @@ void setup()
   // Sensor Instantiation
   IRSensor IRFront(A14, true);
   IRSensor IRBack(A15, false);
+  IRSensor OIRFront(A13, true);
+  IRSensor OIRBack(A12, false);
   SonarSensor sonar(48, 49);
 
   // Intstantiated the Controller
@@ -81,13 +83,19 @@ void setup()
   // Setup for the 4th order FIR filter
   float frontIRValues[5];
   float rearIRValues[5];
+  float oFrontIRValues[5];
+  float oRearIRValues[5];
   for (int i = 0; i < 5; i++)
   {
     frontIRValues[i] = IRFront.getDistance();
     rearIRValues[i] = IRBack.getDistance();
+    oFrontIRValues[i] = OIRFront.getDistance();
+    oRearIRValues[i] = OIRBack.getDistance();
   }
   float frontAvg;
   float rearAvg;
+  float ofrontAvg;
+  float orearAvg;
   int firItr = 0;
 
   // Corner counter
@@ -125,6 +133,8 @@ void setup()
     input into the controller*/
     frontIRValues[firItr] = IRFront.getDistance();
     rearIRValues[firItr] = IRBack.getDistance();
+    oFrontIRValues[firItr] = OIRFront.getDistance();
+    oRearIRValues[firItr] = OIRBack.getDistance();
     firItr = (firItr + 1) % 5;
     frontAvg = 0;
     rearAvg = 0;
@@ -132,9 +142,14 @@ void setup()
     {
       frontAvg += frontIRValues[i];
       rearAvg += rearIRValues[i];
+      ofrontAvg += oFrontIRValues[i];
+      orearAvg += oRearIRValues[i];
+
     }
     frontAvg = frontAvg / 5;
     rearAvg = rearAvg / 5;
+    ofrontAvg = ofrontAvg / 5;
+    orearAvg = orearAvg / 5;
 
     switch(state){
       case INITALIZE:
@@ -180,6 +195,26 @@ void setup()
       case FIRECHECK:
         break;
       case FIREAPPROCH:
+        int distToWall = 1000;
+        int obsticalDiff = 200;
+        int diffIR = abs(ofrontAvg - orearAvg);
+        int avgIR = abs(ofrontAvg - orearAvg)/2;
+        if((diffIR < obsticalDiff) & (avgIR < distToWall)){
+        // Both IR's detect a obstical
+          Serial.println("Both sensors detected an obstical");
+        } else if((diffIR < obsticalDiff) & (avgIR > distToWall)){
+        // None detect
+        Serial.println("Neither sensors detected an obstical");
+        } else if(diffIR > obsticalDiff){
+          // An obstical detected
+          if(ofrontAvg < orearAvg){
+          // The LHS IR sensor has detected an objected
+            Serial.println("LHS sensor detected an obstical");
+          } else if(orearAvg < ofrontAvg){
+          // The RHS IR sensor has detected an objected
+            Serial.println("RHS sensor detected an obstical");
+          }
+        }
         break;
       case FIREEXTINGUISH:
         break;

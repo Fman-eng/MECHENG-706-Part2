@@ -49,6 +49,10 @@ int IRSensor::getDistance()
     return calculatedDistance;
 }
 
+int IRSensor::getAverage()
+{
+
+}
 // getSensorReading takes no input arguments and returns the raw output of a single sensor
 int IRSensor::getSensorReading()
 {
