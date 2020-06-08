@@ -20,6 +20,10 @@ IRSensor::IRSensor(uint8_t pin, int sensor)
     _pin = pin;
     _sensor = sensor;
     pinMode(pin, INPUT);
+    for (int i = 0; i < 5; i++)
+    {
+        IRValues[i] = getDistance();
+    }
 }
 
 /**
@@ -49,10 +53,18 @@ int IRSensor::getDistance()
     return calculatedDistance;
 }
 
-int IRSensor::getAverage()
+float IRSensor::getAverage(int firItr)
 {
-
+    firItr = (firItr + 1) % 5;
+    IRValues[firItr] = getDistance();
+    for (int i = 0; i < 5; i++)
+    {
+      IRAvg += IRValues[i];
+    }
+    IRAvg = IRAvg / 5;
+    return IRAvg;
 }
+
 // getSensorReading takes no input arguments and returns the raw output of a single sensor
 int IRSensor::getSensorReading()
 {
