@@ -87,7 +87,7 @@ void Drive::RotateOL(int turnSpeed, int angle)
 {
   long startTime = millis();
   float angleToTime = 10;
-  while (millis() < startTime + angleToTime * abs(angle))
+  while (millis() < startTime + angleToTime*abs(angle))
   {
     int turnDirection = angle / abs(angle);
     this->leftFrontMotor.writeMicroseconds(1500 + turnSpeed * turnDirection);
@@ -95,6 +95,7 @@ void Drive::RotateOL(int turnSpeed, int angle)
     this->rightFrontMotor.writeMicroseconds(1500 + turnSpeed * turnDirection);
     this->rightRearMotor.writeMicroseconds(1500 + turnSpeed * turnDirection);
   }
+  Halt();
 }
 
 /**

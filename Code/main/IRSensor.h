@@ -26,12 +26,22 @@ private:
   int sensorReadings[5];
   
   float sensorCoefficients[4][4] = {{909, -0.02958, 282.9, -0.003827},
-                                    {898.9, -0.0263, 246.8, -0.003013},
                                     {1065, -0.1442, 284.7, -0.01242},
-                                    {948.5, -0.1262, 250.4, -0.01015}}; //Buffer to hold five sensor readings
+                                    {898.9, -0.0263, 246.8, -0.003013},
+                                    {1065, -0.1442, 284.7, -0.01242}};
+  
+  
+                                    // {{909, -0.02958, 282.9, -0.003827},
+                                    // {1065, -0.1442, 284.7, -0.01242},
+                                    // {898.9, -0.0263, 246.8, -0.003013},
+                                    // {948.5, -0.1262, 250.4, -0.01015}};
+  
+  
+  
+   //Buffer to hold five sensor readings
   //float sensorOneCoeffs[4] = {909, -0.02958, 282.9, -0.003827};    //Sensor1 model coefficients
-  //float sensorTwoCoeffs[4] = {898.9, -0.0263, 246.8, -0.003013};   //Sensor2 model coefficients
-  //float sensorThreeCoeffs[4] = {1065, -0.1442, 284.7, -0.01242};   //Sensor3 model coefficients
+  //float sensorThreeCoeffs[4] = {898.9, -0.0263, 246.8, -0.003013};   //Sensor2 model coefficients
+  //float sensorTwoCoeffs[4] = {1065, -0.1442, 284.7, -0.01242};   //Sensor3 model coefficients
   //float sensorFourCoeffs[4] = {948.5, -0.1262, 250.4,  -0.01015};  //Sensor4 model coefficients
   int sum;                  //Sum variable for internal calculation
   int averageSensorReading; //Average of the five sensor readings in the sensorReadings buffer

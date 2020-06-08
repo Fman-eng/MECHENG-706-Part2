@@ -23,6 +23,8 @@ enum State{
   COMPLETE
 };
 
+
+
 // pidIn is the position array input to the PID controllers
 double pidIn[3];
 // pidOut is the output velocity vector array of the PID controllers
@@ -102,33 +104,32 @@ void setup()
   int isDone = 0;
   
   // state machine
-  State state = WALLFOLLOW;
+  State state = INITALIZE;
 
   float sonarDist;
 
   // Super Loop
   while (1)
   {
-
     frontAvg = IRFront.getAverage();
     rearAvg = IRBack.getAverage();
     obsFrontAvg = OIRFront.getAverage(); 
     obsRearAvg = OIRBack.getAverage();
 
-    Serial.println("\nSide IR's (front, rear):");
-    Serial.print(frontAvg);
-    Serial.print(", ");
-    Serial.println(rearAvg);
-    Serial.println("\nObstical IR's (front, rear):");
-    Serial.print(obsFrontAvg);
-    Serial.print(", ");
-    Serial.println(obsRearAvg);
-    Serial.println("\nSonar");
-    Serial.println(sonar.getDistance());
-    delay(100);
-
+    // Serial.println("\nSide IR's (front, rear):");
+    // Serial.print(frontAvg);
+    // Serial.print(", ");
+    // Serial.println(rearAvg);
+    // Serial.println("\nObstical IR's (front, rear):");
+    // Serial.print(obsFrontAvg);
+    // Serial.print(", ");
+    // Serial.println(obsRearAvg);
+    // Serial.println("\nSonar");
+    // Serial.println(sonar.getDistance());
+            Serial.println("entering Switch Case");
     switch(state){
       case INITALIZE:
+      {
         //Code for intialisation sequence
         //Intilisation code
         Serial.println("Intialising");
@@ -142,8 +143,11 @@ void setup()
         PIDVx.SetMode(MANUAL);
         PIDVy.SetMode(MANUAL);
         PIDW.SetMode(MANUAL);
+        state = WALLFOLLOW;
         break;
+      }
       case WALLFOLLOW:
+      {
         Serial.println("wall following");
         /* This sets the value of Vy and Wz in the velocities array by using the
           IR sensors to meaure its distance and angle from the wall. The wall follow
@@ -165,12 +169,19 @@ void setup()
           counter and turn the next corner.*/
         if (sonarDist <= WALL_STOP_DISTANCE + 5)
         {
+          Serial.println("WALL DETECTED!");
           state = WALLTURN;
         }
         break;
+      }
       case FIRECHECK:
+      {
+              Serial.println("firecheck");
         break;
+      }
       case FIREAPPROCH:
+      {
+              Serial.println("fireapproach");
         int distToWall = 1000;
         int obsticalDiff = 200;
         int diffIR = abs(obsFrontAvg - obsRearAvg);
@@ -192,32 +203,50 @@ void setup()
           }
         }
         break;
+      }
       case FIREEXTINGUISH:
+      {
+              Serial.println("Fireextinguish");
         break;
+      }
       case WALLRETURN:
+      {
+        Serial.println("wallreturn");
+
         break;
+      }
       case WALLTURN:
+      {
         // Code for turning at the corners
         Serial.println("is turning");
-        PIDVx.SetMode(MANUAL);
-        PIDVy.SetMode(MANUAL);
-        PIDW.SetMode(MANUAL);
+        // PIDVx.SetMode(MANUAL);
+        // PIDVy.SetMode(MANUAL);
+        // PIDW.SetMode(MANUAL);
+        drive.EnableMotors();
         drive.RotateOL(500, 90);
-        isAligning = 1;
-        alignTimer = millis();
+        state = WALLFOLLOW;
         break;
+      }
       case COMPLETE:
+      {
         /* When the end point is reached stop the motors*/
         Serial.println("Program Finished");
         // Program finished
         PIDVx.SetMode(MANUAL);
         PIDVy.SetMode(MANUAL);
         PIDW.SetMode(MANUAL);
-        drive.Halt();
         drive.DisableMotors();
         break;
+      }
+      default:
+       {
+        Serial.println("defaulting");
+
+      break;
+      }
     }
-    
+    Serial.println("Ending Switch Case");
+
     PIDVx.Compute();
     PIDVy.Compute();
     PIDW.Compute();
