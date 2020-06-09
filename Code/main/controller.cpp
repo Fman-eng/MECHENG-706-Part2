@@ -86,21 +86,56 @@ void Controller::FrontDetect(double sonar, double targetDistance, double out[3])
   return;
 }
 
-void Controller::GapScan(double Range[360], int angle, double distance)
+void Controller::GapScan(double Range[359], int angle, double distance)
 {
   Range[angle] = distance;
 }
 
-void Controller::GapFill(double Range[360])
+void Controller::GapFill(double Range[359])
 {
-  for (int i = 0; i < 360; ++i)
+  for (int i = 0; i < 359; ++i)
   {
-    /* code */
+    if (Range[i] == 0)
+    {
+      if (i == 0)
+      {
+        if ((Range[359]-Range[1]) > 20)
+        {
+          Range[i] = Range[1]
+        }
+        else
+        {
+          Range[i] = (Range[359]+Range[1])/2;
+        }
+      }
+      else if (i == 359)
+      {
+        if ((Range[359]-Range[1]) > 20)
+        {
+          Range[i] = Range[1]
+        }
+        else
+        {
+          Range[i] = (Range[0]+Range[358])/2;
+        }
+      }
+      else
+      {
+        if ((Range[i-1]-Range[i+1]) > 20)
+        {
+          Range[i] = Range[i+1]
+        }
+        else
+        {
+          Range[i] = (Range[i-1]+Range[i+1])/2;
+        }
+      }
+    }
   }
 }
 
 
-int Controller::GapDetect(double Range[720])
+int Controller::GapDetect(double Range[359])
 {
   int gap = 0;
   int gapStart = 0;
@@ -110,7 +145,7 @@ int Controller::GapDetect(double Range[720])
   int largestGapEnd = 0;
   int index;
   int adjacentIndex;
-  for (int i = 0; i < 540; ++i)
+  for (int i = 0; i < 719; ++i)
   {
     // Check if the range is +- 20cm of the last reading 
 
