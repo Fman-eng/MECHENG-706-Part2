@@ -17,9 +17,14 @@
  */
 IRSensor::IRSensor(uint8_t pin, int sensor)
 {
+    firItr = 0;
     _pin = pin;
     _sensor = sensor;
     pinMode(pin, INPUT);
+    for (int i = 0; i < 5; i++)
+    {
+        IRValues[i] = getDistance();
+    }
 }
 
 /**
@@ -29,7 +34,7 @@ IRSensor::IRSensor(uint8_t pin, int sensor)
  * value of five sensor readings as a simple method to slightly reduce noise. This function uses a two-term exponential
  * model to calculate the sensor readings
  */
-int IRSensor::getDistance()
+float IRSensor::getDistance()
 {
     // Take five readings from the sensor and average them
     sum = 0;
@@ -42,11 +47,31 @@ int IRSensor::getDistance()
     averageSensorReading = sum / 5;
 
     // Use the correct sensor calibration values to calculate the distance from the average sensor readings
-    calculatedDistance = sensorCoefficients[_sensor,0] * exp(sensorCoefficients[_sensor,1] * averageSensorReading) + sensorCoefficients[_sensor,2] * exp(sensorCoefficients[_sensor,3] * averageSensorReading);
+    calculatedDistance = sensorCoefficients[_sensor][0] * exp(sensorCoefficients[_sensor][1] * averageSensorReading) + sensorCoefficients[_sensor][2] * exp(sensorCoefficients[_sensor][3] * averageSensorReading);
    
 
     // Return the calculated distance
     return calculatedDistance;
+}
+
+/* Use a shift register to store the previous values of the IR sensors
+    to apply a fourth order FIR filter, this prevents noise interfering
+    with the derivative terms of the PID controllers. firItr iterates
+    through each value in the arrays and updates them with the new
+    values from the sensors. The arrays are then averaged bfore being
+    input into the controller*/
+float IRSensor::getAverage()
+{
+    return getDistance();
+    firItr = (firItr + 1) % 5;
+    IRValues[firItr] = getDistance();
+    float IRAvg = 0;
+    for (int i = 0; i < 5; i++)
+    {
+      IRAvg += IRValues[i];
+    }
+    Serial.println("");
+    return (IRAvg / 5);
 }
 
 // getSensorReading takes no input arguments and returns the raw output of a single sensor

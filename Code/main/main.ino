@@ -23,6 +23,8 @@ enum State{
   COMPLETE
 };
 
+
+
 // pidIn is the position array input to the PID controllers
 double pidIn[3];
 // pidOut is the output velocity vector array of the PID controllers
@@ -33,8 +35,8 @@ double setPoints[3];
 
 // Setup PID controller instances
 PID PIDVx(&pidIn[0], &pidOut[0], &setPoints[0], 200, 0, 0, REVERSE);
-PID PIDVy(&pidIn[1], &pidOut[1], &setPoints[1], 170, 483, 0, REVERSE);
-PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 130, 420, 0, REVERSE);
+PID PIDVy(&pidIn[1], &pidOut[1], &setPoints[1], 300, 0, 0, REVERSE);
+PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 300, 0, 0, REVERSE);
 
 void setup()
 {
@@ -64,11 +66,14 @@ void setup()
   }
 
   // Sensor Instantiation
-  IRSensor IRFront(A9, true);
-  IRSensor IRBack(A10, false);
-  IRSensor IRFrontOS(A14, true);
-  IRSensor IRBackOS(A15, false);
+  IRSensor IRFront(A15, 0);
+  IRSensor IRBack(A14, 2);
+  IRSensor OIRFront(A13, 3);
+  IRSensor OIRBack(A12, 1);
   SonarSensor sonar(48, 49);
+
+  // Init averaged sensor values
+  float frontAvg = 0, rearAvg = 0, obsFrontAvg = 0, obsRearAvg = 0;
 
   // Intstantiated the Controller
   Controller mainController;
@@ -79,18 +84,6 @@ void setup()
 
   // Initalisation variables
   bool init_finished = false;
-
-  // Setup for the 4th order FIR filter
-  float frontIRValues[5];
-  float rearIRValues[5];
-  for (int i = 0; i < 5; i++)
-  {
-    frontIRValues[i] = IRFront.getDistance();
-    rearIRValues[i] = IRBack.getDistance();
-  }
-  float frontAvg;
-  float rearAvg;
-  int firItr = 0;
 
   // Corner counter
   int cornerCount = 0;
@@ -156,28 +149,25 @@ void setup()
   // Super Loop
   while (1)
   {
+    frontAvg = IRFront.getAverage();
+    rearAvg = IRBack.getAverage();
+    obsFrontAvg = OIRFront.getAverage(); 
+    obsRearAvg = OIRBack.getAverage();
 
-    /* Use a shift register to store the previous values of the IR sensors
-    to apply a fourth order FIR filter, this prevents noise interfering
-    with the derivative terms of the PID controllers. firItr iterates
-    through each value in the arrays and updates them with the new
-    values from the sensors. The arrays are then averaged bfore being
-    input into the controller*/
-    frontIRValues[firItr] = IRFront.getDistance();
-    rearIRValues[firItr] = IRBack.getDistance();
-    firItr = (firItr + 1) % 5;
-    frontAvg = 0;
-    rearAvg = 0;
-    for (int i = 0; i < 5; i++)
-    {
-      frontAvg += frontIRValues[i];
-      rearAvg += rearIRValues[i];
-    }
-    frontAvg = frontAvg / 5;
-    rearAvg = rearAvg / 5;
-
+    // Serial.println("\nSide IR's (front, rear):");
+    // Serial.print(frontAvg);
+    // Serial.print(", ");
+    // Serial.println(rearAvg);
+    // Serial.println("\nObstical IR's (front, rear):");
+    // Serial.print(obsFrontAvg);
+    // Serial.print(", ");
+    // Serial.println(obsRearAvg);
+    // Serial.println("\nSonar");
+    // Serial.println(sonar.getDistance());
+            Serial.println("entering Switch Case");
     switch(state){
       case INITALIZE:
+      {
         //Code for intialisation sequence
         //Intilisation code
         Serial.println("Intialising");
@@ -191,8 +181,11 @@ void setup()
         PIDVx.SetMode(MANUAL);
         PIDVy.SetMode(MANUAL);
         PIDW.SetMode(MANUAL);
+        state = WALLFOLLOW;
         break;
+      }
       case WALLFOLLOW:
+      {
         Serial.println("wall following");
         /* This sets the value of Vy and Wz in the velocities array by using the
           IR sensors to meaure its distance and angle from the wall. The wall follow
@@ -214,39 +207,84 @@ void setup()
           counter and turn the next corner.*/
         if (sonarDist <= WALL_STOP_DISTANCE + 5)
         {
+          Serial.println("WALL DETECTED!");
           state = WALLTURN;
         }
         break;
+      }
       case FIRECHECK:
+      {
+              Serial.println("firecheck");
         break;
+      }
       case FIREAPPROCH:
+      {
+              Serial.println("fireapproach");
+        int distToWall = 1000;
+        int obsticalDiff = 200;
+        int diffIR = abs(obsFrontAvg - obsRearAvg);
+        int avgIR = abs(obsFrontAvg - obsRearAvg)/2;
+        if((diffIR < obsticalDiff) & (avgIR < distToWall)){
+        // Both IR's detect a obstical
+          Serial.println("Both sensors detected an obstical");
+        } else if((diffIR < obsticalDiff) & (avgIR > distToWall)){
+        // None detect
+        Serial.println("Neither sensors detected an obstical");
+        } else if(diffIR > obsticalDiff){
+          // An obstical detected
+          if(obsFrontAvg < obsRearAvg){
+          // The LHS IR sensor has detected an objected
+            Serial.println("LHS sensor detected an obstical");
+          } else if(obsRearAvg < obsFrontAvg){
+          // The RHS IR sensor has detected an objected
+            Serial.println("RHS sensor detected an obstical");
+          }
+        }
         break;
+      }
       case FIREEXTINGUISH:
+      {
+              Serial.println("Fireextinguish");
         break;
+      }
       case WALLRETURN:
+      {
+        Serial.println("wallreturn");
+
         break;
+      }
       case WALLTURN:
+      {
         // Code for turning at the corners
         Serial.println("is turning");
-        PIDVx.SetMode(MANUAL);
-        PIDVy.SetMode(MANUAL);
-        PIDW.SetMode(MANUAL);
+        // PIDVx.SetMode(MANUAL);
+        // PIDVy.SetMode(MANUAL);
+        // PIDW.SetMode(MANUAL);
+        drive.EnableMotors();
         drive.RotateOL(500, 90);
-        isAligning = 1;
-        alignTimer = millis();
+        state = WALLFOLLOW;
         break;
+      }
       case COMPLETE:
+      {
         /* When the end point is reached stop the motors*/
         Serial.println("Program Finished");
         // Program finished
         PIDVx.SetMode(MANUAL);
         PIDVy.SetMode(MANUAL);
         PIDW.SetMode(MANUAL);
-        drive.Halt();
         drive.DisableMotors();
         break;
+      }
+      default:
+       {
+        Serial.println("defaulting");
+
+      break;
+      }
     }
-    
+    Serial.println("Ending Switch Case");
+
     PIDVx.Compute();
     PIDVy.Compute();
     PIDW.Compute();
