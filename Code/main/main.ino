@@ -12,7 +12,7 @@
 
 #define WALL_FOLLOW_DISTANCE 145
 #define WALL_STOP_DISTANCE 50
-#define OBS_DETECT_DISTANCE 100
+#define OBS_DETECT_DISTANCE 300
 #define FIRE_THRESHHOLD 300
 enum State{
   INITALIZE,
@@ -96,8 +96,9 @@ void setup()
     // ########################################################
     frontAvg = IRFront.getAverage();
     rearAvg = IRBack.getAverage();
-    obsFrontAvg = OIRFront.getAverage(); 
-    obsRearAvg = OIRBack.getAverage();
+    obsFrontAvg = OIRFront.getAverage()*10; 
+    obsRearAvg = OIRBack.getAverage()*10;
+
 
     switch(state){
       case INITALIZE:
@@ -143,10 +144,11 @@ void setup()
           state = WALLTURN;
         }
 
-        if (obsRearAvg <= OBS_DETECT_DISTANCE)
+        if (obsFrontAvg <= OBS_DETECT_DISTANCE)
         {
           Serial.println("OBSTACLE DETECTED!");
-          state = FIREAPPROCH;
+          Serial.println(obsRearAvg);
+          state = FIRECHECK;
         }
 
         break;
@@ -154,20 +156,30 @@ void setup()
       case FIRECHECK:
       {
         Serial.println("firecheck");
-        if(pt.FireDetected(FIRE_THRESHHOLD)){
-          state = FIREAPPROCH;
-        }
-        else{
-          state = WALLFOLLOW;
-        }
-        break;
+        PIDVx.SetMode(MANUAL);
+        PIDVy.SetMode(MANUAL);
+        PIDW.SetMode(MANUAL);
+        pidOut[0] = -1000;
+        pidOut[1] = 0;
+        pidOut[2] = 0;
+        // if(pt.FireDetected(FIRE_THRESHHOLD)){
+        //   state = FIREAPPROCH;
+        // }
+        // else{
+        //   state = WALLFOLLOW;
+        // }
+        // break;
+        
+        drive.SetSpeedThroughKinematic(pidOut[0], pidOut[1], pidOut[2]);
+        delay(1000);
+        state = FIREAPPROCH;
       }
       case FIREAPPROCH:
       {
         // Serial.println("fireapproach");
-        PIDVx.SetMode(AUTOMATIC);
-        PIDVy.SetMode(AUTOMATIC);
-        PIDW.SetMode(AUTOMATIC);
+        PIDVx.SetMode(MANUAL);
+        PIDVy.SetMode(MANUAL);
+        PIDW.SetMode(MANUAL);
 
         int distToWall =  50;
         int tolerance = 20;
@@ -175,25 +187,25 @@ void setup()
         int diffIR = abs(obsFrontAvg - obsRearAvg);
         int avgIR = (obsFrontAvg + obsRearAvg)/2;
 
-        pidIn[0] = 0;
+        pidOut[0] = 0;
         // if((obsFrontAvg < stopDist) || (obsRearAvg < stopDist)){
         if(avgIR <= stopDist){
-          pidIn[0]=0;
-          pidIn[1]=0;
-          pidIn[2]=0;
+          pidOut[0]=0;
+          pidOut[1]=0;
+          pidOut[2]=0;
           state=FIREEXTINGUISH;
         } else {
-          pidIn[1] = 10;
+          pidOut[1] = 8000;
         }
-        pidIn[2] = 0;
+        pidOut[2] = 0;
         
-        Serial.print(obsFrontAvg);
-        Serial.print(",");
-        Serial.print(obsRearAvg);
-        Serial.print(",");
-        Serial.print(diffIR);
-        Serial.print(",");
-        Serial.println(avgIR);
+        // Serial.print(obsFrontAvg);
+        // Serial.print(",");
+        // Serial.print(obsRearAvg);
+        // Serial.print(",");
+        // Serial.print(diffIR);
+        // Serial.print(",");
+        // Serial.println(avgIR);
 
         if((diffIR < tolerance) & (avgIR < distToWall)){
         // Both IR's detect a obstical
@@ -206,11 +218,11 @@ void setup()
           if(obsFrontAvg < obsRearAvg){
           // The LHS IR sensor has detected an objected
             // Serial.println("LHS sensor detected an obstical");
-            pidIn[0] = 9;
+            pidOut[0] = 6000;
           } else if(obsRearAvg < obsFrontAvg){
           // The RHS IR sensor has detected an objected
             // Serial.println("RHS sensor detected an obstical");
-            pidIn[0] = -11;
+            pidOut[0] = -6000;
           }
         }
         break;
@@ -240,9 +252,9 @@ void setup()
         PIDVy.SetMode(MANUAL);
         PIDW.SetMode(MANUAL);
         if(((frontAvg+rearAvg)/2) > WALL_FOLLOW_DISTANCE){
-          pidIn[1] = -5000;
+          pidOut[1] = -5000;
         } else{
-          pidIn[1] = 0;
+          pidOut[1] = 0;
           state = WALLFOLLOW;
         }
         break;

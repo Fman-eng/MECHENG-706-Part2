@@ -20,7 +20,7 @@ public:
 
 private:
   uint8_t _pin; //Pin number assigned to the sensor
-  float IRValues[5];
+  float IRValues[5] = {500,500,500,500,500};
   int firItr;
   int _sensor;  //Is this sensor1 or sensor2 (written on bottom of sensor module)
   int sensorReadings[5];
