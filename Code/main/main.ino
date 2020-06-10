@@ -73,7 +73,7 @@ void setup()
   SonarSensor sonar(48, 49);
 
   // Init averaged sensor values
-  float frontAvg = 0, rearAvg = 0, obsFrontAvg = 0, obsRearAvg = 0;
+  float frontAvg = 0, rearAvg = 0, obsFrontAvg = 0, obsRearAvg = 0, sonarDist = 0;
 
   // Intstantiated the Controller
   Controller mainController;
@@ -81,72 +81,9 @@ void setup()
   // Instantiate and initialise Drive
   Drive drive(46, 47, 50, 51);
   drive.Init();
-
-  // Initalisation variables
-  bool init_finished = false;
-
-  // Corner counter
-  int cornerCount = 0;
-
-  // Flag for Intialising and finding the wall
-  int isIntialising = 1;
-
-  // Flag for open-loop cornering
-  int isTurning = 0;
-
-  // Flag for wall alignment after corner
-  int isAligning = 0;
-
-  // Timer to wait till robot is aligned
-  float alignTimer;
-
-  // Flag for finished course
-  int isDone = 0;
   
   // state machine
   State state = INITALIZE;
-
-  float sonarDist;
-
-//   int sensorDiff=0, sensorAvg=0, detectionThreshold=100, distToWall=1500, stopDist=50;
-// //  while((sensorAvg < stopDist) & (sensorDiff < detectionThreshold)){
-//   while(1){
-//     //############## DELETE WHEN FINISHED ###############
-//     state = FIREAPPROCH;
-//     PIDVx.SetMode(AUTOMATIC);
-//     PIDVy.SetMode(AUTOMATIC);
-//     PIDW.SetMode(AUTOMATIC);
-//     // Detect an obstical
-//     //Serial.println(abs(IRFront.getDistance()-IRBack.getDistance()));
-//     Serial.print(IRFrontOS.getDistance());
-//     Serial.print(",");
-//     Serial.println(IRBack.getDistance());
-//     sensorDiff = abs(IRFrontOS.getDistance()-IRBack.getDistance());
-//     sensorAvg = (IRFrontOS.getDistance()-IRBack.getDistance())/2;
-//     pidIn[0] = 0;
-//     pidIn[1] = -5;
-//     pidIn[2] = 0;
-//     if((sensorDiff < detectionThreshold) & sensorAvg < distToWall){
-//       //drive forward
-//       Serial.println("Obstical Detected!");
-//     }
-//     else if((IRFrontOS.getDistance()-IRBack.getDistance()) > detectionThreshold){
-//       Serial.println("Drive 1"); 
-//       pidIn[0] = 2;
-//     } else if((IRBack.getDistance()-IRFrontOS.getDistance()) > detectionThreshold){
-//       // drive xx
-//       Serial.println("Drive 2");
-//       pidIn[0] = -2;
-//     } else if (sensorDiff < detectionThreshold & sensorAvg > distToWall){
-//       Serial.println("Lost obstical");
-//       pidIn[0] = 0;
-//     }
-//     PIDVx.Compute();
-//     PIDVy.Compute();
-//     PIDW.Compute();
-//     drive.SetSpeedThroughKinematic(pidOut[0], pidOut[1], pidOut[2]);
-//     delay(50);
-//   }
 
   // Super Loop
   while (1)
@@ -166,16 +103,13 @@ void setup()
         //Code for intialisation sequence
         //Intilisation code
         Serial.println("Intialising");
-        if (mainController.InitForWall(frontAvg, rearAvg, pidOut))
-        {
-          isAligning = 1;
-          isIntialising = 0;
-          alignTimer = millis();
-        }
 
         PIDVx.SetMode(MANUAL);
         PIDVy.SetMode(MANUAL);
         PIDW.SetMode(MANUAL);
+        if (mainController.InitForWall(frontAvg, rearAvg, pidOut))
+        {
+        }
         state = WALLFOLLOW;
         break;
       }
