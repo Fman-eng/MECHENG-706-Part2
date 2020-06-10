@@ -155,53 +155,72 @@ void setup()
 
         int distToWall =  50;
         int tolerance = 20;
+        int stopDist = 20;
         int diffIR = abs(obsFrontAvg - obsRearAvg);
-        int avgIR = abs(obsFrontAvg - obsRearAvg)/2;
+        int avgIR = (obsFrontAvg + obsRearAvg)/2;
 
         pidIn[0] = 0;
-        if(avgIR < 15){
+        // if((obsFrontAvg < stopDist) || (obsRearAvg < stopDist)){
+        if(avgIR <= stopDist){
+          pidIn[1]=0;
+          state=WALLRETURN;
+        } else {
           pidIn[1] = 10;
         }
         pidIn[2] = 0;
         
-        // Serial.println("IR VALUES");
-        // Serial.print(obsFrontAvg);
-        // Serial.print(",");
-        // Serial.print(obsRearAvg);
-        // Serial.print(",");
-        // Serial.print(diffIR);
-        // Serial.print(",");
-        // Serial.println(avgIR);
+        Serial.print(obsFrontAvg);
+        Serial.print(",");
+        Serial.print(obsRearAvg);
+        Serial.print(",");
+        Serial.print(diffIR);
+        Serial.print(",");
+        Serial.println(avgIR);
 
         if((diffIR < tolerance) & (avgIR < distToWall)){
         // Both IR's detect a obstical
-          Serial.println("Both sensors detected an obstical");
+          // Serial.println("Both sensors detected an obstical");
         } else if((diffIR < tolerance) & (avgIR > distToWall)){
         // None detect
-          Serial.println("Neither sensors detected an obstical");
+          // Serial.println("Neither sensors detected an obstical");
         } else if(diffIR > tolerance){
           // An obstical detected
           if(obsFrontAvg < obsRearAvg){
           // The LHS IR sensor has detected an objected
-            Serial.println("LHS sensor detected an obstical");
-            pidIn[0] = 5;
+            // Serial.println("LHS sensor detected an obstical");
+            pidIn[0] = 9;
           } else if(obsRearAvg < obsFrontAvg){
           // The RHS IR sensor has detected an objected
-            Serial.println("RHS sensor detected an obstical");
-            pidIn[0] = -5;
+            // Serial.println("RHS sensor detected an obstical");
+            pidIn[0] = -11;
           }
         }
         break;
       }
       case FIREEXTINGUISH:
       {
-              Serial.println("Fireextinguish");
+        Serial.println("Fireextinguish");
         break;
       }
       case WALLRETURN:
       {
         Serial.println("wallreturn");
+        int error_tol = 2;
+        if((((frontAvg + rearAvg)/2)-WALL_FOLLOW_DISTANCE) < error_tol){
+          state = WALLFOLLOW;
+        }
+        mainController.WallFollow(frontAvg, rearAvg, WALL_FOLLOW_DISTANCE, pidIn);
 
+        /* Check if the PIDs need to be computed, the PIDs run at 50Hz which is
+          slower than the super loop. Every few loops the PIDs will be recalulated,
+          this ensures that the timestep stay constant prefencting issues with the
+          intergrator and derivitive term */
+        PIDVx.SetMode(AUTOMATIC);
+        PIDVy.SetMode(AUTOMATIC);
+        PIDW.SetMode(AUTOMATIC);
+
+        /* Check if the next wall has been reached, increment the corner
+          counter and turn the next corner.*/
         break;
       }
       case WALLTURN:
