@@ -8,9 +8,10 @@
 #include "SonarSensor.h"
 #include "PID_v1.h"
 #include "Phototransistors.h"
+#include "NewPing.h"
 
 #define WALL_FOLLOW_DISTANCE 145
-#define WALL_STOP_DISTANCE 40
+#define WALL_STOP_DISTANCE 50
 
 enum State{
   INITALIZE,
@@ -70,7 +71,7 @@ void setup()
   IRSensor IRBack(A14, 2);
   IRSensor OIRFront(A13, 3);
   IRSensor OIRBack(A12, 1);
-  SonarSensor sonar(48, 49);
+  NewPing sonar(48, 49, 1000);
 
   // Init averaged sensor values
   float frontAvg = 0, rearAvg = 0, obsFrontAvg = 0, obsRearAvg = 0, sonarDist = 0;
@@ -103,7 +104,7 @@ void setup()
     // Serial.println(obsRearAvg);
     // Serial.println("\nSonar");
     // Serial.println(sonar.getDistance());
-            Serial.println("entering Switch Case");
+    //        Serial.println("entering Switch Case");
     switch(state){
       case INITALIZE:
       {
@@ -127,7 +128,9 @@ void setup()
           IR sensors to meaure its distance and angle from the wall. The wall follow
           is set to 145mm to account for the location of the IR sensorson the robot.
           front detect is set to have the robot stop 40mm from the next wall*/
-        sonarDist = sonar.getDistance();
+        sonarDist = sonar.ping_cm()*10;
+        //sonarDist = sonar.getDistance();
+        Serial.println(sonarDist);
         mainController.WallFollow(frontAvg, rearAvg, WALL_FOLLOW_DISTANCE, pidIn);
         mainController.FrontDetect(sonarDist, WALL_STOP_DISTANCE, pidIn);
 
@@ -151,6 +154,7 @@ void setup()
       case FIRECHECK:
       {
         Serial.println("firecheck");
+
         break;
       }
       case FIREAPPROCH:
@@ -193,9 +197,9 @@ void setup()
       {
         // Code for turning at the corners
         Serial.println("is turning");
-        // PIDVx.SetMode(MANUAL);
-        // PIDVy.SetMode(MANUAL);
-        // PIDW.SetMode(MANUAL);
+        PIDVx.SetMode(MANUAL);
+        PIDVy.SetMode(MANUAL);
+        PIDW.SetMode(MANUAL);
         drive.EnableMotors();
         drive.RotateOL(500, 90);
         state = WALLFOLLOW;
@@ -219,7 +223,7 @@ void setup()
       break;
       }
     }
-    Serial.println("Ending Switch Case");
+    //Serial.println("Ending Switch Case");
 
     PIDVx.Compute();
     PIDVy.Compute();
