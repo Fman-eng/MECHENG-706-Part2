@@ -69,9 +69,9 @@ void setup()
   // Sensor Instantiation
   IRSensor IRFront(A15, 0);
   IRSensor IRBack(A14, 2);
-  IRSensor OIRFront(A13, 3);
-  IRSensor OIRBack(A12, 1);
   NewPing sonar(48, 49, 1000);
+  IRSensor OIRBack(A7, 1);
+  IRSensor OIRFront(A5, 3);
 
   // Init averaged sensor values
   float frontAvg = 0, rearAvg = 0, obsFrontAvg = 0, obsRearAvg = 0, sonarDist = 0;
@@ -89,22 +89,15 @@ void setup()
   // Super Loop
   while (1)
   {
+    // ################ DELETE WHEN FINISHED ##################
+    state = FIREAPPROCH;
+    delay(100);
+    // ########################################################
     frontAvg = IRFront.getAverage();
     rearAvg = IRBack.getAverage();
     obsFrontAvg = OIRFront.getAverage(); 
     obsRearAvg = OIRBack.getAverage();
 
-    // Serial.println("\nSide IR's (front, rear):");
-    // Serial.print(frontAvg);
-    // Serial.print(", ");
-    // Serial.println(rearAvg);
-    // Serial.println("\nObstical IR's (front, rear):");
-    // Serial.print(obsFrontAvg);
-    // Serial.print(", ");
-    // Serial.println(obsRearAvg);
-    // Serial.println("\nSonar");
-    // Serial.println(sonar.getDistance());
-    //        Serial.println("entering Switch Case");
     switch(state){
       case INITALIZE:
       {
@@ -159,25 +152,47 @@ void setup()
       }
       case FIREAPPROCH:
       {
-        Serial.println("fireapproach");
-        int distToWall = 1000;
-        int obsticalDiff = 200;
+        // Serial.println("fireapproach");
+        PIDVx.SetMode(AUTOMATIC);
+        PIDVy.SetMode(AUTOMATIC);
+        PIDW.SetMode(AUTOMATIC);
+
+        int distToWall =  50;
+        int tolerance = 20;
         int diffIR = abs(obsFrontAvg - obsRearAvg);
         int avgIR = abs(obsFrontAvg - obsRearAvg)/2;
-        if((diffIR < obsticalDiff) & (avgIR < distToWall)){
+
+        pidIn[0] = 0;
+        if(avgIR < 15){
+          pidIn[1] = 10;
+        }
+        pidIn[2] = 0;
+        
+        // Serial.println("IR VALUES");
+        // Serial.print(obsFrontAvg);
+        // Serial.print(",");
+        // Serial.print(obsRearAvg);
+        // Serial.print(",");
+        // Serial.print(diffIR);
+        // Serial.print(",");
+        // Serial.println(avgIR);
+
+        if((diffIR < tolerance) & (avgIR < distToWall)){
         // Both IR's detect a obstical
           Serial.println("Both sensors detected an obstical");
-        } else if((diffIR < obsticalDiff) & (avgIR > distToWall)){
+        } else if((diffIR < tolerance) & (avgIR > distToWall)){
         // None detect
-        Serial.println("Neither sensors detected an obstical");
-        } else if(diffIR > obsticalDiff){
+          Serial.println("Neither sensors detected an obstical");
+        } else if(diffIR > tolerance){
           // An obstical detected
           if(obsFrontAvg < obsRearAvg){
           // The LHS IR sensor has detected an objected
             Serial.println("LHS sensor detected an obstical");
+            pidIn[0] = 5;
           } else if(obsRearAvg < obsFrontAvg){
           // The RHS IR sensor has detected an objected
             Serial.println("RHS sensor detected an obstical");
+            pidIn[0] = -5;
           }
         }
         break;
@@ -223,7 +238,6 @@ void setup()
       break;
       }
     }
-    //Serial.println("Ending Switch Case");
 
     PIDVx.Compute();
     PIDVy.Compute();

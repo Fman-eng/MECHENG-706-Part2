@@ -62,7 +62,6 @@ float IRSensor::getDistance()
     input into the controller*/
 float IRSensor::getAverage()
 {
-    return getDistance();
     firItr = (firItr + 1) % 5;
     IRValues[firItr] = getDistance();
     float IRAvg = 0;
