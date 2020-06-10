@@ -153,42 +153,42 @@ void setup()
         PIDVy.SetMode(AUTOMATIC);
         PIDW.SetMode(AUTOMATIC);
 
-        int distToWall =  100;
-        int obsticalDiff = 50;
+        int distToWall =  50;
+        int tolerance = 20;
         int diffIR = abs(obsFrontAvg - obsRearAvg);
         int avgIR = abs(obsFrontAvg - obsRearAvg)/2;
 
         pidIn[0] = 0;
-        if(avgIR > 5){
-          pidIn[1] = -5;
+        if(avgIR < 15){
+          pidIn[1] = 10;
         }
         pidIn[2] = 0;
         
         // Serial.println("IR VALUES");
-        Serial.print(obsFrontAvg);
-        Serial.print(",");
-        Serial.print(obsRearAvg);
-        Serial.print(",");
-        Serial.print(diffIR);
-        Serial.print(",");
-        Serial.println(avgIR);
+        // Serial.print(obsFrontAvg);
+        // Serial.print(",");
+        // Serial.print(obsRearAvg);
+        // Serial.print(",");
+        // Serial.print(diffIR);
+        // Serial.print(",");
+        // Serial.println(avgIR);
 
-        if((diffIR < obsticalDiff) & (avgIR < distToWall)){
+        if((diffIR < tolerance) & (avgIR < distToWall)){
         // Both IR's detect a obstical
           Serial.println("Both sensors detected an obstical");
-        } else if((diffIR < obsticalDiff) & (avgIR > distToWall)){
+        } else if((diffIR < tolerance) & (avgIR > distToWall)){
         // None detect
           Serial.println("Neither sensors detected an obstical");
-        } else if(diffIR > obsticalDiff){
+        } else if(diffIR > tolerance){
           // An obstical detected
           if(obsFrontAvg < obsRearAvg){
           // The LHS IR sensor has detected an objected
             Serial.println("LHS sensor detected an obstical");
-            pidIn[0] = 2;
+            pidIn[0] = 5;
           } else if(obsRearAvg < obsFrontAvg){
           // The RHS IR sensor has detected an objected
             Serial.println("RHS sensor detected an obstical");
-            pidIn[0] = -2;
+            pidIn[0] = -5;
           }
         }
         break;

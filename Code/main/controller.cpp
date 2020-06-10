@@ -101,7 +101,7 @@ void Controller::GapFill(double Range[359])
       {
         if ((Range[359]-Range[1]) > 20)
         {
-          Range[i] = Range[1]
+          Range[i] = Range[1];
         }
         else
         {
@@ -112,7 +112,7 @@ void Controller::GapFill(double Range[359])
       {
         if ((Range[359]-Range[1]) > 20)
         {
-          Range[i] = Range[1]
+          Range[i] = Range[1];
         }
         else
         {
@@ -123,7 +123,7 @@ void Controller::GapFill(double Range[359])
       {
         if ((Range[i-1]-Range[i+1]) > 20)
         {
-          Range[i] = Range[i+1]
+          Range[i] = Range[i+1];
         }
         else
         {
