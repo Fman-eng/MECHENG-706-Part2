@@ -12,7 +12,8 @@
 
 #define WALL_FOLLOW_DISTANCE 145
 #define WALL_STOP_DISTANCE 50
-
+#define OBS_DETECT_DISTANCE 100
+#define FIRE_THRESHHOLD 300
 enum State{
   INITALIZE,
   WALLFOLLOW,
@@ -37,7 +38,7 @@ double setPoints[3];
 // Setup PID controller instances
 PID PIDVx(&pidIn[0], &pidOut[0], &setPoints[0], 200, 0, 0, REVERSE);
 PID PIDVy(&pidIn[1], &pidOut[1], &setPoints[1], 300, 0, 0, REVERSE);
-PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 50, 0, 0, REVERSE);
+PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 300, 0, 0, REVERSE);
 
 void setup()
 {
@@ -84,10 +85,15 @@ void setup()
   drive.Init();
   
   // state machine
-  State state = FIREAPPROCH;
+  State state = WALLFOLLOW;
 
   // Super Loop
-  while (1){
+  while (1)
+  {
+    // ################ DELETE WHEN FINISHED ##################
+    
+    //delay(100);
+    // ########################################################
     frontAvg = IRFront.getAverage();
     rearAvg = IRBack.getAverage();
     obsFrontAvg = OIRFront.getAverage(); 
@@ -130,66 +136,81 @@ void setup()
         PIDVy.SetMode(AUTOMATIC);
         PIDW.SetMode(AUTOMATIC);
 
-        /* Check if the next wall has been reached, increment the corner
-          counter and turn the next corner.*/
-        if (sonarDist <= WALL_STOP_DISTANCE + 5)
+        /* Check if the next wall has been reached, Change the state to wallturn*/
+        if (sonarDist <= WALL_STOP_DISTANCE)
         {
           Serial.println("WALL DETECTED!");
           state = WALLTURN;
         }
+
+        if (obsRearAvg <= OBS_DETECT_DISTANCE)
+        {
+          Serial.println("OBSTACLE DETECTED!");
+          state = FIREAPPROCH;
+        }
+
         break;
       }
       case FIRECHECK:
       {
         Serial.println("firecheck");
-
+        if(pt.FireDetected(FIRE_THRESHHOLD)){
+          state = FIREAPPROCH;
+        }
+        else{
+          state = WALLFOLLOW;
+        }
         break;
       }
       case FIREAPPROCH:
       {
-        Serial.println("fireapproach");
-        PIDVx.SetMode(MANUAL);
-        PIDVy.SetMode(MANUAL);
+        // Serial.println("fireapproach");
+        PIDVx.SetMode(AUTOMATIC);
+        PIDVy.SetMode(AUTOMATIC);
         PIDW.SetMode(AUTOMATIC);
 
         int distToWall =  50;
         int tolerance = 20;
-        int stopDist = 24;
+        int stopDist = 5;
         int diffIR = abs(obsFrontAvg - obsRearAvg);
         int avgIR = (obsFrontAvg + obsRearAvg)/2;
 
-        pidOut[0] = 0;
-        //if((obsFrontAvg <= stopDist) || (obsRearAvg <= stopDist)){
+        pidIn[0] = 0;
+        // if((obsFrontAvg < stopDist) || (obsRearAvg < stopDist)){
         if(avgIR <= stopDist){
-          Serial.println("STOPPING!");
-          pidOut[1] = 0;
-          delay(5000);
-          state=WALLRETURN;
-          break;
+          pidIn[0]=0;
+          pidIn[1]=0;
+          pidIn[2]=0;
+          state=FIREEXTINGUISH;
         } else {
-          pidOut[1] = 3000;
+          pidIn[1] = 10;
         }
-
-        // Set the rotation based on the side mounted IR sensors
-        // pidIn[2] = (frontAvg - rearAvg)/(2 * 185);
+        pidIn[2] = 0;
         
         Serial.print(obsFrontAvg);
         Serial.print(",");
-        Serial.println(obsRearAvg);
+        Serial.print(obsRearAvg);
+        Serial.print(",");
+        Serial.print(diffIR);
+        Serial.print(",");
+        Serial.println(avgIR);
 
         if((diffIR < tolerance) & (avgIR < distToWall)){
         // Both IR's detect a obstical
           // Serial.println("Both sensors detected an obstical");
+        } else if((diffIR < tolerance) & (avgIR > distToWall)){
+        // None detect
+          // Serial.println("Neither sensors detected an obstical");
         } else if(diffIR > tolerance){
           // An obstical detected
           if(obsFrontAvg < obsRearAvg){
           // The LHS IR sensor has detected an objected
             // Serial.println("LHS sensor detected an obstical");
-            pidOut[0] = 2000;
+            pidIn[0] = 9;
           } else if(obsRearAvg < obsFrontAvg){
           // The RHS IR sensor has detected an objected
             // Serial.println("RHS sensor detected an obstical");
-            pidOut[0] = -2000;
+            pidIn[0] = -11;
           }
         }
         break;
@@ -197,27 +218,33 @@ void setup()
       case FIREEXTINGUISH:
       {
         Serial.println("Fireextinguish");
+        digitalWrite(12, HIGH);
+        delay(10000);
+        digitalWrite(12, LOW);
+        state=WALLRETURN;
         break;
+
+        // if(pt.FireDetected(FIRE_THRESHHOLD)){
+        //   int timer;
+        //   digitalWrite(12,HIGH);
+        // }
+        // else{
+        //   state = WALLFOLLOW;
+        // }
+        // break;
       }
       case WALLRETURN:
       {
         Serial.println("wallreturn");
-        int error_tol = 2;
-        if((((frontAvg + rearAvg)/2)-WALL_FOLLOW_DISTANCE) < error_tol){
+        PIDVx.SetMode(MANUAL);
+        PIDVy.SetMode(MANUAL);
+        PIDW.SetMode(MANUAL);
+        if(((frontAvg+rearAvg)/2) > WALL_FOLLOW_DISTANCE){
+          pidIn[1] = -5000;
+        } else{
+          pidIn[1] = 0;
           state = WALLFOLLOW;
         }
-        mainController.WallFollow(frontAvg, rearAvg, WALL_FOLLOW_DISTANCE, pidIn);
-
-        /* Check if the PIDs need to be computed, the PIDs run at 50Hz which is
-          slower than the super loop. Every few loops the PIDs will be recalulated,
-          this ensures that the timestep stay constant prefencting issues with the
-          intergrator and derivitive term */
-        PIDVx.SetMode(AUTOMATIC);
-        PIDVy.SetMode(AUTOMATIC);
-        PIDW.SetMode(AUTOMATIC);
-
-        /* Check if the next wall has been reached, increment the corner
-          counter and turn the next corner.*/
         break;
       }
       case WALLTURN:
