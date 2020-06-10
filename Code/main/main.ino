@@ -84,15 +84,13 @@ void setup()
   drive.Init();
   
   // state machine
-  State state = INITALIZE;
+  State state = FIREAPPROCH;
 
   // Super Loop
-  while (1)
-  {
-    // ################ DELETE WHEN FINISHED ##################
+  while (1){
+    // ################# DELETE ###################
     state = FIREAPPROCH;
-    delay(100);
-    // ########################################################
+    // ############################################
     frontAvg = IRFront.getAverage();
     rearAvg = IRBack.getAverage();
     obsFrontAvg = OIRFront.getAverage(); 
@@ -167,11 +165,14 @@ void setup()
         // if((obsFrontAvg < stopDist) || (obsRearAvg < stopDist)){
         if(avgIR <= stopDist){
           pidIn[1]=0;
-          state=WALLRETURN;
+          //state=WALLRETURN;
+          break;
         } else {
           pidIn[1] = 10;
         }
-        pidIn[2] = 0;
+
+        // Set the rotation based on the side mounted IR sensors
+        pidIn[2] = (frontAvg - rearAvg)/(2 * 185);
         
         Serial.print(obsFrontAvg);
         Serial.print(",");

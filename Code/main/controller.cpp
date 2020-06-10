@@ -51,7 +51,7 @@ void Controller::WallFollow(double frontIR, double backIR, double targetDistance
 {
   float l_IR = 185; //Distance between IR sensors
   out[1] = targetDistance - (frontIR + backIR) / 2;
-  out[2] = atan2((frontIR - backIR),(2 * l_IR));
+  out[2] = (frontIR - backIR)/(2 * l_IR);
   Serial.println(out[2]);
   return;
 }
