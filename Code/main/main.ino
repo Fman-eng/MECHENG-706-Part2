@@ -37,7 +37,7 @@ double setPoints[3];
 // Setup PID controller instances
 PID PIDVx(&pidIn[0], &pidOut[0], &setPoints[0], 200, 0, 0, REVERSE);
 PID PIDVy(&pidIn[1], &pidOut[1], &setPoints[1], 300, 0, 0, REVERSE);
-PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 300, 0, 0, REVERSE);
+PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 50, 0, 0, REVERSE);
 
 void setup()
 {
@@ -88,9 +88,6 @@ void setup()
 
   // Super Loop
   while (1){
-    // ################# DELETE ###################
-    state = FIREAPPROCH;
-    // ############################################
     frontAvg = IRFront.getAverage();
     rearAvg = IRBack.getAverage();
     obsFrontAvg = OIRFront.getAverage(); 
@@ -150,54 +147,49 @@ void setup()
       }
       case FIREAPPROCH:
       {
-        // Serial.println("fireapproach");
-        PIDVx.SetMode(AUTOMATIC);
-        PIDVy.SetMode(AUTOMATIC);
+        Serial.println("fireapproach");
+        PIDVx.SetMode(MANUAL);
+        PIDVy.SetMode(MANUAL);
         PIDW.SetMode(AUTOMATIC);
 
         int distToWall =  50;
         int tolerance = 20;
-        int stopDist = 20;
+        int stopDist = 24;
         int diffIR = abs(obsFrontAvg - obsRearAvg);
         int avgIR = (obsFrontAvg + obsRearAvg)/2;
 
-        pidIn[0] = 0;
-        // if((obsFrontAvg < stopDist) || (obsRearAvg < stopDist)){
+        pidOut[0] = 0;
+        //if((obsFrontAvg <= stopDist) || (obsRearAvg <= stopDist)){
         if(avgIR <= stopDist){
-          pidIn[1]=0;
-          //state=WALLRETURN;
+          Serial.println("STOPPING!");
+          pidOut[1] = 0;
+          delay(5000);
+          state=WALLRETURN;
           break;
         } else {
-          pidIn[1] = 10;
+          pidOut[1] = 3000;
         }
 
         // Set the rotation based on the side mounted IR sensors
-        pidIn[2] = (frontAvg - rearAvg)/(2 * 185);
+        // pidIn[2] = (frontAvg - rearAvg)/(2 * 185);
         
         Serial.print(obsFrontAvg);
         Serial.print(",");
-        Serial.print(obsRearAvg);
-        Serial.print(",");
-        Serial.print(diffIR);
-        Serial.print(",");
-        Serial.println(avgIR);
+        Serial.println(obsRearAvg);
 
         if((diffIR < tolerance) & (avgIR < distToWall)){
         // Both IR's detect a obstical
           // Serial.println("Both sensors detected an obstical");
-        } else if((diffIR < tolerance) & (avgIR > distToWall)){
-        // None detect
-          // Serial.println("Neither sensors detected an obstical");
         } else if(diffIR > tolerance){
           // An obstical detected
           if(obsFrontAvg < obsRearAvg){
           // The LHS IR sensor has detected an objected
             // Serial.println("LHS sensor detected an obstical");
-            pidIn[0] = 9;
+            pidOut[0] = 2000;
           } else if(obsRearAvg < obsFrontAvg){
           // The RHS IR sensor has detected an objected
             // Serial.println("RHS sensor detected an obstical");
-            pidIn[0] = -11;
+            pidOut[0] = -2000;
           }
         }
         break;
