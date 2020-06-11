@@ -14,8 +14,8 @@
 
 #define WALL_FOLLOW_DISTANCE 145
 #define WALL_STOP_DISTANCE 50
-#define OBS_DETECT_DISTANCE 300
-#define FIRE_THRESHHOLD 350
+#define OBS_DETECT_DISTANCE 400
+#define FIRE_THRESHHOLD 50
 
 enum State{
   INITALIZE,
@@ -245,7 +245,7 @@ void setup()
           state = WALLTURN;
         }
 
-        if (obsRearAvg <= OBS_DETECT_DISTANCE)
+        if ((obsRearAvg >= OBS_DETECT_DISTANCE) && (obsFrontAvg >= OBS_DETECT_DISTANCE))
         {
           Serial.println("OBSTACLE DETECTED!");
           Serial.println(obsRearAvg);
@@ -302,13 +302,13 @@ void setup()
 
         int distToWall =  50;
         int tolerance = 20;
-        int stopDist = 5;
+        int stopDist = 20;
         int diffIR = abs(obsFrontAvg - obsRearAvg);
         int avgIR = (obsFrontAvg + obsRearAvg)/2;
 
         pidOut[0] = 0;
-        //if((obsFrontAvg < stopDist) || (obsRearAvg < stopDist)){
-        if(avgIR <= stopDist){
+        if((obsFrontAvg < stopDist) || (obsRearAvg < stopDist)){
+        //if(avgIR <= stopDist){
           pidOut[0]=0;
           pidOut[1]=0;
           pidOut[2]=0;
