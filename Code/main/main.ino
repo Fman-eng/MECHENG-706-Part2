@@ -19,6 +19,7 @@
 
 enum State{
   INITALIZE,
+  CRUISEMOTION,
   WALLFOLLOW,
   WALLIGNORE,
   FIRECHECK,
@@ -165,11 +166,39 @@ void setup()
         } else {
             pidOut[2] = 0;
             Serial.print(gyroAngle);
-            Serial.print(", ");
+            Serial.print(",");
             Serial.println(drivingAngle);
-
+            state=CRUISEMOTION;
         }
        }
+        break;
+      }
+      case CRUISEMOTION:
+      {
+        Serial.print("Executing Cruise Motion");
+
+        // Set PID values
+        PIDVx.SetMode(AUTOMATIC);
+        PIDVy.SetMode(AUTOMATIC);
+        PIDW.SetMode(AUTOMATIC);
+
+        // Get the sonar value
+        int sonarDist = sonar.ping_cm()*10;
+        Serial.println(sonarDist);
+
+        // If the robot has reached a wall
+        int stopDist=65;
+        if(sonarDist<=stopDist){
+          pidOut[0]=0;
+          if(mainController.InitForWall(frontAvg, rearAvg, pidOut)){
+            Serial.println("Halting Robot and going to Wall Follow");
+            state=WALLFOLLOW;
+          }
+          Serial.println("Reached Wall and Rotating");
+        } else{ // else it is still driving to a wall
+          Serial.println("Driving to the wall");
+          mainController.FrontDetect(sonarDist, WALL_STOP_DISTANCE, pidIn);
+        }
         break;
       }
       case WALLFOLLOW:
@@ -236,7 +265,8 @@ void setup()
         PIDW.SetMode(AUTOMATIC);
 
         /* Check if the next wall has been reached, Change the state to wallturn*/
-        if (sonarDist <= WALL_STOP_DISTANCE)
+        int stoppingDist = 100;
+        if (sonarDist <= stoppingDist)
         {
           Serial.println("WALL DETECTED!");
           state = WALLTURN;
