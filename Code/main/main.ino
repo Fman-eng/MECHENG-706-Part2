@@ -164,10 +164,9 @@ void setup()
             Serial.println("Gap detected");
             Serial.flush();
             FirstAttempt = false;
-            for (int i = 0; i < 359; ++i){
-              Serial.println(Ranges[i]);
-            }
-            delay(20);
+            // for (int i = 0; i < 359; ++i){
+            //   Serial.println(Ranges[i]);
+            // }
           }
 
         if(gyroAngle < (360 +drivingAngle))
