@@ -37,11 +37,11 @@ bool Phototransistors::FireDetected(int threshold){
   
   int offset = 0;
   
-  Serial.print(activeReading1+offset);
-  Serial.print(',');
-  Serial.println(activeReading2);
+  //Serial.print(activeReading1+offset);
+  //Serial.print(',');
+  //Serial.println(activeReading2);
 
-  if((activeReading1 > ptDetectionThreshold) && (abs(activeReading1-activeReading2) < ptDeviationThreshold)){
+  if((activeReading1 > threshold) && (abs(activeReading1-activeReading2) < ptDeviationThreshold)){
     return true;
   } else {
     return false;

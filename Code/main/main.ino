@@ -13,10 +13,11 @@
 #define WALL_FOLLOW_DISTANCE 145
 #define WALL_STOP_DISTANCE 50
 #define OBS_DETECT_DISTANCE 300
-#define FIRE_THRESHHOLD 300
+#define FIRE_THRESHHOLD 350
 enum State{
   INITALIZE,
   WALLFOLLOW,
+  WALLIGNORE,
   FIRECHECK,
   FIREAPPROCH,
   FIREEXTINGUISH,
@@ -86,12 +87,15 @@ void setup()
   
   // state machine
   State state = WALLFOLLOW;
-
+  // while(1){
+  //   Serial.println(pt.FireDetected(FIRE_THRESHHOLD));
+  //   delay(1);
+  // }
   // Super Loop
   while (1)
   {
     // ################ DELETE WHEN FINISHED ##################
-    
+    //state = FIRECHECK;
     //delay(100);
     // ########################################################
     frontAvg = IRFront.getAverage();
@@ -144,7 +148,7 @@ void setup()
           state = WALLTURN;
         }
 
-        if (obsFrontAvg <= OBS_DETECT_DISTANCE)
+        if (obsRearAvg <= OBS_DETECT_DISTANCE)
         {
           Serial.println("OBSTACLE DETECTED!");
           Serial.println(obsRearAvg);
@@ -153,26 +157,54 @@ void setup()
 
         break;
       }
+      case WALLIGNORE:
+      {
+        Serial.println("obstacle ignoring");
+        /* This sets the value of Vy and Wz in the velocities array by using the
+          IR sensors to meaure its distance and angle from the wall. The wall follow
+          is set to 145mm to account for the location of the IR sensorson the robot.
+          front detect is set to have the robot stop 40mm from the next wall*/
+        sonarDist = sonar.ping_cm()*10;
+        //sonarDist = sonar.getDistance();
+        Serial.println(sonarDist);
+        mainController.WallFollow(frontAvg, rearAvg, WALL_FOLLOW_DISTANCE, pidIn);
+        mainController.FrontDetect(sonarDist, WALL_STOP_DISTANCE, pidIn);
+
+        /* Check if the PIDs need to be computed, the PIDs run at 50Hz which is
+          slower than the super loop. Every few loops the PIDs will be recalulated,
+          this ensures that the timestep stay constant prefencting issues with the
+          intergrator and derivitive term */
+        PIDVx.SetMode(AUTOMATIC);
+        PIDVy.SetMode(AUTOMATIC);
+        PIDW.SetMode(AUTOMATIC);
+
+        /* Check if the next wall has been reached, Change the state to wallturn*/
+        if (sonarDist <= WALL_STOP_DISTANCE)
+        {
+          Serial.println("WALL DETECTED!");
+          state = WALLTURN;
+        }
+
+        if (obsRearAvg <= OBS_DETECT_DISTANCE)
+        {
+          Serial.println("OBSTACLE DETECTED!");
+          Serial.println(obsRearAvg);
+          state = WALLFOLLOW;
+        }
+
+        break;
+      }
       case FIRECHECK:
       {
         Serial.println("firecheck");
-        PIDVx.SetMode(MANUAL);
-        PIDVy.SetMode(MANUAL);
-        PIDW.SetMode(MANUAL);
-        pidOut[0] = -1000;
-        pidOut[1] = 0;
-        pidOut[2] = 0;
-        // if(pt.FireDetected(FIRE_THRESHHOLD)){
-        //   state = FIREAPPROCH;
-        // }
-        // else{
-        //   state = WALLFOLLOW;
-        // }
-        // break;
-        
-        drive.SetSpeedThroughKinematic(pidOut[0], pidOut[1], pidOut[2]);
-        delay(1000);
-        state = FIREAPPROCH;
+        Serial.println(pt.FireDetected(FIRE_THRESHHOLD)); 
+        if(pt.FireDetected(FIRE_THRESHHOLD)){
+          state = FIREAPPROCH;
+        }
+        else{
+          state = WALLIGNORE;
+        }
+        break;
       }
       case FIREAPPROCH:
       {
@@ -183,13 +215,13 @@ void setup()
 
         int distToWall =  50;
         int tolerance = 20;
-        int stopDist = 5;
+        int stopDist = 20;
         int diffIR = abs(obsFrontAvg - obsRearAvg);
         int avgIR = (obsFrontAvg + obsRearAvg)/2;
 
         pidOut[0] = 0;
-        // if((obsFrontAvg < stopDist) || (obsRearAvg < stopDist)){
-        if(avgIR <= stopDist){
+        if((obsFrontAvg < stopDist) || (obsRearAvg < stopDist)){
+        //if(avgIR <= stopDist){
           pidOut[0]=0;
           pidOut[1]=0;
           pidOut[2]=0;
@@ -199,13 +231,7 @@ void setup()
         }
         pidOut[2] = 0;
         
-        // Serial.print(obsFrontAvg);
-        // Serial.print(",");
-        // Serial.print(obsRearAvg);
-        // Serial.print(",");
-        // Serial.print(diffIR);
-        // Serial.print(",");
-        // Serial.println(avgIR);
+        
 
         if((diffIR < tolerance) & (avgIR < distToWall)){
         // Both IR's detect a obstical
@@ -255,7 +281,7 @@ void setup()
           pidOut[1] = -5000;
         } else{
           pidOut[1] = 0;
-          state = WALLFOLLOW;
+          state = WALLIGNORE;
         }
         break;
       }
