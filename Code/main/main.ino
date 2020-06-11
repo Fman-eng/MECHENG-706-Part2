@@ -14,8 +14,8 @@
 
 #define WALL_FOLLOW_DISTANCE 145
 #define WALL_STOP_DISTANCE 50
-#define OBS_DETECT_DISTANCE 400
-#define FIRE_THRESHHOLD 50
+#define OBS_DETECT_DISTANCE 300
+#define FIRE_THRESHHOLD 200
 
 enum State{
   INITALIZE,
@@ -51,6 +51,7 @@ PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 300, 0, 0, REVERSE);
 void setup()
 {
   Serial.begin(9600);
+  delay(5000);
   Phototransistors pt(A9, A10, A8, A8);
   pinMode(12, OUTPUT);
 
@@ -103,6 +104,9 @@ void setup()
   int gyroAngle = 0;
   int drivingAngle = 0;
   int angle = 360;
+
+  // Init values
+  bool reachedWall = false;
 
   while (1)
   {
@@ -189,7 +193,7 @@ void setup()
       }
       case CRUISEMOTION:
       {
-        //Serial.print("Executing Cruise Motion");
+        Serial.print("Executing Cruise Motion");
 
         // Set PID values
         PIDVx.SetMode(AUTOMATIC);
@@ -198,11 +202,18 @@ void setup()
 
         // Get the sonar value
         int sonarDist = sonar.ping_cm()*10;
-        Serial.println(sonarDist);
+
+        Serial.print(frontAvg);
+        Serial.print(", ");
+        Serial.println(rearAvg);
+        int stopDist=200;
 
         // If the robot has reached a wall
-        int stopDist=60;
         if(sonarDist<=stopDist){
+          reachedWall = true;
+        }
+
+        if(reachedWall){
           PIDVx.SetMode(MANUAL);
           PIDVy.SetMode(MANUAL);
           PIDW.SetMode(MANUAL);
@@ -213,7 +224,6 @@ void setup()
           }
           Serial.println("Reached Wall and Rotating");
         } else{ // else it is still driving to a wall
-          //Serial.println("Driving to the wall");
           mainController.FrontDetect(sonarDist, WALL_STOP_DISTANCE, pidIn);
         }
         break;
@@ -375,11 +385,11 @@ void setup()
           if(obsFrontAvg < obsRearAvg){
           // The LHS IR sensor has detected an objected
             // Serial.println("LHS sensor detected an obstical");
-            pidOut[0] = 6000;
+            pidOut[0] = 5000;
           } else if(obsRearAvg < obsFrontAvg){
           // The RHS IR sensor has detected an objected
             // Serial.println("RHS sensor detected an obstical");
-            pidOut[0] = -6000;
+            pidOut[0] = -5000;
           }
         }
         break;

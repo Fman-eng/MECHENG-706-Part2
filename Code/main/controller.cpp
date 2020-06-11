@@ -31,8 +31,17 @@ Controller::Controller()
  */
 bool Controller::InitForWall(double frontIR, double backIR, double out[3])
 {
-  double IRTolerence = 20;
-  bool finished = abs(frontIR - backIR) < IRTolerence;
+  double IRDiffTol = 30;
+  double IRAvgTol = 250 ;
+  bool finished = ((abs(frontIR - backIR) < IRDiffTol) & (((frontIR+backIR)/2)<IRAvgTol));
+  if(abs(frontIR - backIR) > IRDiffTol){
+    Serial.println("Failing the Diff condition");
+    Serial.println(abs(frontIR - backIR));
+  }
+  if(((frontIR+backIR)/2)>IRAvgTol){
+    Serial.println("Failing the Avg condition");
+    Serial.println(((frontIR+backIR)/2));
+  }
   out[0] = 0;
   out[1] = 0;
   out[2] = -20; // Turning speed initially, CCW
