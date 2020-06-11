@@ -94,20 +94,17 @@ void setup()
   
   // state machine
   State state = INITALIZE;
-  // while(1){
-  //   Serial.println(pt.FireDetected(FIRE_THRESHHOLD));
-  //   delay(1);
-  // }
-  // Super Loop
+
+  // Gyro value instantiation 
   gyro.gyroReset();
   bool firstLoop = true;
   bool FirstAttempt = true;
+  int gyroAngle = 0;
+  int drivingAngle = 0;
+  int angle = 360;
+
   while (1)
   {
-    // ################ DELETE WHEN FINISHED ##################
-    //state = FIRECHECK;
-    //delay(100);
-    // ########################################################
     frontAvg = IRFront.getAverage();
     rearAvg = IRBack.getAverage();
     obsFrontAvg = OIRFront.getAverage()*10; 
@@ -121,12 +118,6 @@ void setup()
         //Serial.println("Intialising");
 
         // Initialise gyroAngle to store the gyro value
-        int gyroAngle = 0;
-        int drivingAngle = 0;
-
-        // Desired Angle 
-        int angle = 360;
-
         // Reset the gyro
         if(firstLoop){
           gyro.gyroReset();
@@ -146,6 +137,7 @@ void setup()
             pidOut[1] = 0;
             pidOut[2] = -20;
             gyroAngle = round(gyro.gyroUpdate());
+            Serial.println(gyroAngle);
             int distance = sonar.ping_cm()*10;
             mainController.GapScan(Ranges, gyroAngle, distance);
         } else
@@ -163,15 +155,20 @@ void setup()
             Serial.flush();
             FirstAttempt = false;
           }
-      //   if(gyroAngle < drivingAngle)
-      //   {
-      //       pidOut[0] = 0;
-      //       pidOut[1] = 0;
-      //       pidOut[2] = -20;
+        if(gyroAngle < (360 +drivingAngle))
+        {
+            pidOut[0] = 0;
+            pidOut[1] = 0;
+            pidOut[2] = -20;
+            Serial.println("Stuck 1");
 
-      //   } else {
-      //       pidOut[2] = 0;
-      //   }
+        } else {
+            pidOut[2] = 0;
+            Serial.print(gyroAngle);
+            Serial.print(", ");
+            Serial.println(drivingAngle);
+
+        }
        }
         break;
       }

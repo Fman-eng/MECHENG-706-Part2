@@ -42,8 +42,14 @@ float Gyro::gyroUpdate(){
     ringBufferIndex = (ringBufferIndex + 1)%10;
     oldMillis = newMillis;
     //Serial.print("Angle=");
-    Serial.println(currentAngle);
+    //Serial.println(currentAngle);
+    if(currentAngle < 0){
+        currentAngle = 0;
+    }
+    
     return currentAngle;
+    
+
 
 }
 
