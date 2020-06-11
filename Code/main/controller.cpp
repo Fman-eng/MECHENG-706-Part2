@@ -153,7 +153,7 @@ int Controller::GapDetect(double Range[359])
     adjacentIndex = ((i + 1)%360);
 
     // if ((Range[index] < (Range[adjacentIndex] + 200)) && (Range[index] > (Range[adjacentIndex] - 200)))
-    if(abs(Range[index] - Range[adjacentIndex]) > 200)
+    if(abs(Range[index] - Range[adjacentIndex]) < 200)
     {
       gap = gap + 1;
       if (gap > largestGap )
@@ -171,7 +171,7 @@ int Controller::GapDetect(double Range[359])
     }
   }
 
-  int turnTo = ((largestGap/2) + largestGapStart)%359;
+  int turnTo = ((largestGap/2) + largestGapStart)%360;
 
   return turnTo; 
 }
