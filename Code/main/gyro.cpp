@@ -1,7 +1,7 @@
 #include "Arduino.h"
-#include "gyro.h"
+#include "Gyro.h"
 
-gyro::gyro(uint8_t pin, float ADCOffset, float sensitivity)
+Gyro::Gyro(uint8_t pin, float ADCOffset, float sensitivity)
 {
     _pin = pin;
     pinMode(pin, INPUT);
@@ -18,7 +18,7 @@ gyro::gyro(uint8_t pin, float ADCOffset, float sensitivity)
 }
 
 
-float gyro::gyroUpdate(){
+float Gyro::gyroUpdate(){
     newMillis = micros();
     float gyroRate = analogRead(_pin);
 
@@ -41,14 +41,15 @@ float gyro::gyroUpdate(){
 
     ringBufferIndex = (ringBufferIndex + 1)%10;
     oldMillis = newMillis;
-
+    //Serial.print("Angle=");
+    Serial.println(currentAngle);
     return currentAngle;
 
 }
 
 
 
-void gyro::gyroReset(){
+void Gyro::gyroReset(){
     for(int i = 0; i < 10; i++){
         gyroRates[i] = 0;
     }

@@ -1,12 +1,12 @@
-#ifndef gyro_h
-#define gyro_h
+#ifndef Gyro_h
+#define Gyro_h
 
 #include "Arduino.h"
 
-class gyro
+class Gyro
 {
 public:
-  gyro(uint8_t pin, float ADCOffset, float sensitivity); // Constructor for this class
+  Gyro(uint8_t pin, float ADCOffset, float sensitivity); // Constructor for this class
   float gyroUpdate();    //Must be called in the super loop
   void gyroReset();     //Resets the angle count
 

@@ -138,53 +138,53 @@ void Controller::GapFill(double Range[359])
 
 int Controller::GapDetect(double Range[359])
 {
-  int gap = 0;
-  int gapStart = 0;
-  int gapEnd = 0;
-  int largestGap = 0;
-  int largestGapStart = 0;
-  int largestGapEnd = 0;
-  int index;
-  int adjacentIndex;
-  for (int i = 0; i < 719; ++i)
-  {
-    // Check if the range is +- 20cm of the last reading 
+  // int gap = 0;
+  // int gapStart = 0;
+  // int gapEnd = 0;
+  // int largestGap = 0;
+  // int largestGapStart = 0;
+  // int largestGapEnd = 0;
+  // int index;
+  // int adjacentIndex;
+  // for (int i = 0; i < 719; ++i)
+  // {
+  //   // Check if the range is +- 20cm of the last reading 
 
-    if (i < 359)
-    {
-      index = i;
-      adjacentIndex = i+1;
-    }
-    else if (i = 359)
-    {
-      index = i;
-      adjacentIndex = i%359;
-    }
-    else if (i > 359)
-    {
-      index = i%359;
-      adjacentIndex = (i%359) + 1;
-    }
+  //   if (i < 359)
+  //   {
+  //     index = i;
+  //     adjacentIndex = i+1;
+  //   }
+  //   else if (i = 359)
+  //   {
+  //     index = i;
+  //     adjacentIndex = i%359;
+  //   }
+  //   else if (i > 359)
+  //   {
+  //     index = i%359;
+  //     adjacentIndex = (i%359) + 1;
+  //   }
 
-    if ((Range[index] < (Range[adjacentIndex] + 20)) && (Range[index] > (Range[adjacentIndex] - 20)))
-    {
-      gap = gap + 1;
-      if (gap > largestGap )
-      {
-        largestGap = gap;
-        largestGapStart = gapStart%359; 
-        largestGapEnd = (i+1)%359; 
-      }
-      gapEnd = i;
-    }
-    else
-    {
-      gap = 1;
-      gapStart = i+1; 
-    }
-  }
+  //   if ((Range[index] < (Range[adjacentIndex] + 20)) && (Range[index] > (Range[adjacentIndex] - 20)))
+  //   {
+  //     gap = gap + 1;
+  //     if (gap > largestGap )
+  //     {
+  //       largestGap = gap;
+  //       largestGapStart = gapStart%359; 
+  //       largestGapEnd = (i+1)%359; 
+  //     }
+  //     gapEnd = i;
+  //   }
+  //   else
+  //   {
+  //     gap = 1;
+  //     gapStart = i+1; 
+  //   }
+  // }
 
-  int turnTo = ((largestGap/2) + largestGapStart)%359;
+  // int turnTo = ((largestGap/2) + largestGapStart)%359;
 
-  return turnTo; 
+  return 90;//turnTo; 
 }

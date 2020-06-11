@@ -9,6 +9,8 @@
 #include "PID_v1.h"
 #include "Phototransistors.h"
 #include "NewPing.h"
+#include "Gyro.h"
+#include <math.h>
 
 #define WALL_FOLLOW_DISTANCE 145
 #define WALL_STOP_DISTANCE 50
@@ -36,6 +38,9 @@ double pidOut[3];
 /* setPoint contains the values the Controllers will attempt to drive
 the error to, in our case this will be zero. */
 double setPoints[3];
+
+// Ranges array for initialise case 
+double Ranges[359] = {0};
 
 // Setup PID controller instances
 PID PIDVx(&pidIn[0], &pidOut[0], &setPoints[0], 200, 0, 0, REVERSE);
@@ -75,6 +80,7 @@ void setup()
   NewPing sonar(48, 49, 1000);
   IRSensor OIRBack(A7, 1);
   IRSensor OIRFront(A5, 3);
+  Gyro gyro(A11, 508.65, 0.007);
 
   // Init averaged sensor values
   float frontAvg = 0, rearAvg = 0, obsFrontAvg = 0, obsRearAvg = 0, sonarDist = 0;
@@ -87,12 +93,15 @@ void setup()
   drive.Init();
   
   // state machine
-  State state = WALLFOLLOW;
+  State state = INITALIZE;
   // while(1){
   //   Serial.println(pt.FireDetected(FIRE_THRESHHOLD));
   //   delay(1);
   // }
   // Super Loop
+  gyro.gyroReset();
+  bool firstLoop = true;
+  bool FirstAttempt = true;
   while (1)
   {
     // ################ DELETE WHEN FINISHED ##################
@@ -108,17 +117,62 @@ void setup()
     switch(state){
       case INITALIZE:
       {
-        //Code for intialisation sequence
         //Intilisation code
-        Serial.println("Intialising");
+        //Serial.println("Intialising");
+
+        // Initialise gyroAngle to store the gyro value
+        int gyroAngle = 0;
+        int drivingAngle = 0;
+
+        // Desired Angle 
+        int angle = 360;
+
+        // Reset the gyro
+        if(firstLoop){
+          gyro.gyroReset();
+          firstLoop = false;
+        }
+
+        // Update the gyro reading
+        gyroAngle = round(gyro.gyroUpdate());
 
         PIDVx.SetMode(MANUAL);
         PIDVy.SetMode(MANUAL);
         PIDW.SetMode(MANUAL);
-        if (mainController.InitForWall(frontAvg, rearAvg, pidOut))
+
+        if(gyroAngle < angle)
         {
-        }
-        state = WALLFOLLOW;
+            pidOut[0] = 0;
+            pidOut[1] = 0;
+            pidOut[2] = -20;
+            gyroAngle = round(gyro.gyroUpdate());
+            int distance = sonar.ping_cm()*10;
+            mainController.GapScan(Ranges, gyroAngle, distance);
+        } else
+        {
+          if(FirstAttempt){
+            Serial.println("Made it");
+            pidOut[2] = 0;
+            Serial.println("Stopped Rotation");
+            Serial.flush();
+            mainController.GapFill(Ranges);
+            Serial.println("Gaps Filled");
+            Serial.flush();
+            drivingAngle = mainController.GapDetect(Ranges);
+            Serial.println("Gap detected");
+            Serial.flush();
+            FirstAttempt = false;
+          }
+      //   if(gyroAngle < drivingAngle)
+      //   {
+      //       pidOut[0] = 0;
+      //       pidOut[1] = 0;
+      //       pidOut[2] = -20;
+
+      //   } else {
+      //       pidOut[2] = 0;
+      //   }
+       }
         break;
       }
       case WALLFOLLOW:
