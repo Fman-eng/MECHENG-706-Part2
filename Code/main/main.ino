@@ -13,7 +13,7 @@
 #define WALL_FOLLOW_DISTANCE 145
 #define WALL_STOP_DISTANCE 50
 #define OBS_DETECT_DISTANCE 300
-#define FIRE_THRESHHOLD 350
+#define FIRE_THRESHHOLD 250
 enum State{
   INITALIZE,
   WALLFOLLOW,
@@ -95,7 +95,7 @@ void setup()
   while (1)
   {
     // ################ DELETE WHEN FINISHED ##################
-    //state = FIRECHECK;
+    state = FIRECHECK;
     //delay(100);
     // ########################################################
     frontAvg = IRFront.getAverage();
@@ -197,12 +197,41 @@ void setup()
       case FIRECHECK:
       {
         Serial.println("firecheck");
+        /* This sets the value of Vy and Wz in the velocities array by using the
+          IR sensors to meaure its distance and angle from the wall. The wall follow
+          is set to 145mm to account for the location of the IR sensorson the robot.
+          front detect is set to have the robot stop 40mm from the next wall*/
+        sonarDist = sonar.ping_cm()*10;
+        //sonarDist = sonar.getDistance();
+        Serial.println(sonarDist);
+        mainController.WallFollow(frontAvg, rearAvg, WALL_FOLLOW_DISTANCE, pidIn);
+        mainController.FrontDetect(sonarDist, WALL_STOP_DISTANCE, pidIn);
+
+        /* Check if the PIDs need to be computed, the PIDs run at 50Hz which is
+          slower than the super loop. Every few loops the PIDs will be recalulated,
+          this ensures that the timestep stay constant prefencting issues with the
+          intergrator and derivitive term */
+        PIDVx.SetMode(AUTOMATIC);
+        PIDVy.SetMode(AUTOMATIC);
+        PIDW.SetMode(AUTOMATIC);
+
+        /* Check if the next wall has been reached, Change the state to wallturn*/
+        if (sonarDist <= WALL_STOP_DISTANCE)
+        {
+          Serial.println("WALL DETECTED!");
+          state = WALLTURN;
+        }
+
+        if ((obsRearAvg >= OBS_DETECT_DISTANCE) && (obsRearAvg >= OBS_DETECT_DISTANCE) )
+        {
+          Serial.println("OBSTACLE Passed!");
+          Serial.println(obsRearAvg);
+          state = WALLFOLLOW;
+        }
+        
         Serial.println(pt.FireDetected(FIRE_THRESHHOLD)); 
         if(pt.FireDetected(FIRE_THRESHHOLD)){
           state = FIREAPPROCH;
-        }
-        else{
-          state = WALLIGNORE;
         }
         break;
       }
@@ -255,6 +284,12 @@ void setup()
       }
       case FIREEXTINGUISH:
       {
+        // Set motor values to zero
+        pidOut[0] = 0;
+        pidOut[1] = 0;
+        pidOut[2] = 0;
+        drive.SetSpeedThroughKinematic(pidOut[0], pidOut[1], pidOut[2]);
+
         Serial.println("Fireextinguish");
         digitalWrite(12, HIGH);
         delay(10000);
