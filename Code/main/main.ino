@@ -148,14 +148,28 @@ void setup()
             pidOut[2] = 0;
             Serial.println("Stopped Rotation");
             Serial.flush();
-            mainController.GapFill(Ranges);
+
+            bool isZero = true;
+            while (isZero){
+              isZero = false;
+              for (int i = 0; i < 359; ++i){
+                if(Ranges[i] == 0){
+                  isZero = true;
+                  mainController.GapFill(Ranges);
+                }
+              }
+            }
             Serial.println("Gaps Filled");
             Serial.flush();
             drivingAngle = mainController.GapDetect(Ranges);
             Serial.println("Gap detected");
             Serial.flush();
             FirstAttempt = false;
+            // for (int i = 0; i < 359; ++i){
+            //   Serial.println(Ranges[i]);
+            // }
           }
+
         if(gyroAngle < (360 +drivingAngle))
         {
             pidOut[0] = 0;
