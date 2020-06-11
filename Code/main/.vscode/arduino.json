@@ -1,3 +1,6 @@
 {
-    "programmer": "Arduino as ISP"
+    "programmer": "Arduino as ISP",
+    "board": "arduino:avr:mega",
+    "configuration": "cpu=atmega2560",
+    "sketch": "main.ino"
 }
