@@ -31,8 +31,8 @@ Controller::Controller()
  */
 bool Controller::InitForWall(double frontIR, double backIR, double out[3])
 {
-  double IRDiffTol = 30;
-  double IRAvgTol = 250 ;
+  double IRDiffTol = 20;
+  double IRAvgTol = 200 ;
   bool finished = ((abs(frontIR - backIR) < IRDiffTol) & (((frontIR+backIR)/2)<IRAvgTol));
   if(abs(frontIR - backIR) > IRDiffTol){
     Serial.println("Failing the Diff condition");
@@ -44,7 +44,7 @@ bool Controller::InitForWall(double frontIR, double backIR, double out[3])
   }
   out[0] = 0;
   out[1] = 0;
-  out[2] = -20; // Turning speed initially, CCW
+  out[2] = -25; // Turning speed initially, CCW
   return finished ? 1 : 0;
 }
 

@@ -12,10 +12,10 @@
 #include "Gyro.h"
 #include <math.h>
 
-#define WALL_FOLLOW_DISTANCE 145
-#define WALL_STOP_DISTANCE 50
-#define OBS_DETECT_DISTANCE 300
-#define FIRE_THRESHHOLD 200
+#define WALL_FOLLOW_DISTANCE 165
+#define WALL_STOP_DISTANCE 70
+#define OBS_DETECT_DISTANCE 600
+#define FIRE_THRESHHOLD 20
 
 enum State{
   INITALIZE,
@@ -44,14 +44,14 @@ double setPoints[3];
 double Ranges[359] = {0};
 
 // Setup PID controller instances
-PID PIDVx(&pidIn[0], &pidOut[0], &setPoints[0], 200, 0, 0, REVERSE);
+PID PIDVx(&pidIn[0], &pidOut[0], &setPoints[0], 100, 0, 0, REVERSE);
 PID PIDVy(&pidIn[1], &pidOut[1], &setPoints[1], 300, 0, 0, REVERSE);
-PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 300, 0, 0, REVERSE);
+PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 400, 0, 0, REVERSE);
 
 void setup()
 {
   Serial.begin(9600);
-  delay(5000);
+  delay(1000);
   Phototransistors pt(A9, A10, A8, A8);
   pinMode(12, OUTPUT);
 
@@ -59,7 +59,7 @@ void setup()
   if the output goes outside of the range specified below. */
   PIDVx.SetOutputLimits(-8000, 8000);
   PIDVy.SetOutputLimits(-8000, 8000);
-  PIDW.SetOutputLimits(-2000, 2000);
+  PIDW.SetOutputLimits(-4000, 4000);
 
   /* Begin the PIDs in manual mode as we start with Open-loop control
   to find the starting wall. */
@@ -107,7 +107,7 @@ void setup()
 
   // Init values
   bool reachedWall = false;
-
+  int fireCount = 0;
   while (1)
   {
     frontAvg = IRFront.getAverage();
@@ -140,7 +140,7 @@ void setup()
         {
             pidOut[0] = 0;
             pidOut[1] = 0;
-            pidOut[2] = -20;
+            pidOut[2] = -100;
             gyroAngle = round(gyro.gyroUpdate());
             Serial.println(gyroAngle);
             int distance = sonar.ping_cm()*10;
@@ -178,7 +178,7 @@ void setup()
         {
             pidOut[0] = 0;
             pidOut[1] = 0;
-            pidOut[2] = -20;
+            pidOut[2] = -100;
             Serial.println("Stuck 1");
 
         } else {
@@ -206,7 +206,7 @@ void setup()
         Serial.print(frontAvg);
         Serial.print(", ");
         Serial.println(rearAvg);
-        int stopDist=200;
+        int stopDist=75;
 
         // If the robot has reached a wall
         if(sonarDist<=stopDist){
@@ -219,6 +219,7 @@ void setup()
           PIDW.SetMode(MANUAL);
           bool finished = mainController.InitForWall(frontAvg, rearAvg, pidOut);
           if(finished){
+            pidOut[2] = 0;
             Serial.println("Halting Robot and going to Wall Follow");
             state=WALLFOLLOW;
           }
@@ -371,8 +372,6 @@ void setup()
           pidOut[1] = 8000;
         }
         pidOut[2] = 0;
-        
-        
 
         if((diffIR < tolerance) & (avgIR < distToWall)){
         // Both IR's detect a obstical
@@ -385,11 +384,11 @@ void setup()
           if(obsFrontAvg < obsRearAvg){
           // The LHS IR sensor has detected an objected
             // Serial.println("LHS sensor detected an obstical");
-            pidOut[0] = 5000;
+            pidOut[0] = 3000;
           } else if(obsRearAvg < obsFrontAvg){
           // The RHS IR sensor has detected an objected
             // Serial.println("RHS sensor detected an obstical");
-            pidOut[0] = -5000;
+            pidOut[0] = -3000;
           }
         }
         break;
@@ -406,6 +405,8 @@ void setup()
         digitalWrite(12, HIGH);
         delay(10000);
         digitalWrite(12, LOW);
+        fireCount++;
+        if(fireCount >= 2) state = COMPLETE;
         state=WALLRETURN;
         break;
 
