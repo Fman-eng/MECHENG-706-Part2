@@ -13,7 +13,8 @@
 #define WALL_FOLLOW_DISTANCE 145
 #define WALL_STOP_DISTANCE 50
 #define OBS_DETECT_DISTANCE 300
-#define FIRE_THRESHHOLD 250
+#define FIRE_THRESHHOLD 350
+
 enum State{
   INITALIZE,
   WALLFOLLOW,
@@ -122,6 +123,7 @@ void setup()
       }
       case WALLFOLLOW:
       {
+        bool frontDect = false;
         Serial.println("wall following");
         /* This sets the value of Vy and Wz in the velocities array by using the
           IR sensors to meaure its distance and angle from the wall. The wall follow
@@ -148,13 +150,17 @@ void setup()
           state = WALLTURN;
         }
 
-        if (obsRearAvg <= OBS_DETECT_DISTANCE)
+        if (obsFrontAvg <= OBS_DETECT_DISTANCE)
         {
+          frontDect = true;
           Serial.println("OBSTACLE DETECTED!");
           Serial.println(obsRearAvg);
+        } else if(obsRearAvg <= OBS_DETECT_DISTANCE){
+          frontDect = false;
+        }
+        if(frontDect){
           state = FIRECHECK;
         }
-
         break;
       }
       case WALLIGNORE:
@@ -202,8 +208,6 @@ void setup()
           is set to 145mm to account for the location of the IR sensorson the robot.
           front detect is set to have the robot stop 40mm from the next wall*/
         sonarDist = sonar.ping_cm()*10;
-        //sonarDist = sonar.getDistance();
-        Serial.println(sonarDist);
         mainController.WallFollow(frontAvg, rearAvg, WALL_FOLLOW_DISTANCE, pidIn);
         mainController.FrontDetect(sonarDist, WALL_STOP_DISTANCE, pidIn);
 
@@ -221,18 +225,18 @@ void setup()
           Serial.println("WALL DETECTED!");
           state = WALLTURN;
         }
-
-        if ((obsRearAvg >= OBS_DETECT_DISTANCE) && (obsRearAvg >= OBS_DETECT_DISTANCE) )
+        
+        Serial.println(pt.FireDetected(FIRE_THRESHHOLD)); 
+        if(pt.FireDetected(FIRE_THRESHHOLD)){
+          Serial.println("FIRE DETECTED!");
+          state = FIREAPPROCH;
+        } else if ((obsFrontAvg >= OBS_DETECT_DISTANCE) && (obsRearAvg >= OBS_DETECT_DISTANCE) )
         {
           Serial.println("OBSTACLE Passed!");
           Serial.println(obsRearAvg);
           state = WALLFOLLOW;
         }
-        
-        Serial.println(pt.FireDetected(FIRE_THRESHHOLD)); 
-        if(pt.FireDetected(FIRE_THRESHHOLD)){
-          state = FIREAPPROCH;
-        }
+
         break;
       }
       case FIREAPPROCH:
@@ -244,13 +248,13 @@ void setup()
 
         int distToWall =  50;
         int tolerance = 20;
-        int stopDist = 20;
+        int stopDist = 5;
         int diffIR = abs(obsFrontAvg - obsRearAvg);
         int avgIR = (obsFrontAvg + obsRearAvg)/2;
 
         pidOut[0] = 0;
-        if((obsFrontAvg < stopDist) || (obsRearAvg < stopDist)){
-        //if(avgIR <= stopDist){
+        //if((obsFrontAvg < stopDist) || (obsRearAvg < stopDist)){
+        if(avgIR <= stopDist){
           pidOut[0]=0;
           pidOut[1]=0;
           pidOut[2]=0;

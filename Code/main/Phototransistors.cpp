@@ -41,11 +41,7 @@ bool Phototransistors::FireDetected(int threshold){
   //Serial.print(',');
   //Serial.println(activeReading2);
 
-  if((activeReading1 > threshold) && (abs(activeReading1-activeReading2) < ptDeviationThreshold)){
-    return true;
-  } else {
-    return false;
-  }
+  return ((activeReading1+activeReading2)/2 > threshold);
 }
   /**
  * Get the IR sensor reading. 
