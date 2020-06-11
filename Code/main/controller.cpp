@@ -31,11 +31,11 @@ Controller::Controller()
  */
 bool Controller::InitForWall(double frontIR, double backIR, double out[3])
 {
-  double IRTolerence = 5;
+  double IRTolerence = 0;
   bool finished = abs(frontIR - backIR) < IRTolerence;
   out[0] = 0;
   out[1] = 0;
-  out[2] = 20; // Turning speed initially, CCW
+  out[2] = -20; // Turning speed initially, CCW
   return finished ? 1 : 0;
 }
 

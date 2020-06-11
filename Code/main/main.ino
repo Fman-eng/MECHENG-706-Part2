@@ -189,7 +189,7 @@ void setup()
       }
       case CRUISEMOTION:
       {
-        Serial.print("Executing Cruise Motion");
+        //Serial.print("Executing Cruise Motion");
 
         // Set PID values
         PIDVx.SetMode(AUTOMATIC);
@@ -201,16 +201,16 @@ void setup()
         Serial.println(sonarDist);
 
         // If the robot has reached a wall
-        int stopDist=65;
+        int stopDist=150;
         if(sonarDist<=stopDist){
-          pidOut[0]=0;
-          if(mainController.InitForWall(frontAvg, rearAvg, pidOut)){
+          bool finished = mainController.InitForWall(frontAvg, rearAvg, pidIn);
+          if(finished){
             Serial.println("Halting Robot and going to Wall Follow");
             state=WALLFOLLOW;
           }
           Serial.println("Reached Wall and Rotating");
         } else{ // else it is still driving to a wall
-          Serial.println("Driving to the wall");
+          //Serial.println("Driving to the wall");
           mainController.FrontDetect(sonarDist, WALL_STOP_DISTANCE, pidIn);
         }
         break;
