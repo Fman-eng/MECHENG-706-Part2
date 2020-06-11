@@ -193,6 +193,8 @@ void setup()
       }
       case CRUISEMOTION:
       {
+        """ This function drives to a wall, rotates until it detect it is parrallel
+            with a wall and then enters wall follow. """
         Serial.print("Executing Cruise Motion");
 
         // Set PID values
@@ -206,9 +208,9 @@ void setup()
         Serial.print(frontAvg);
         Serial.print(", ");
         Serial.println(rearAvg);
-        int stopDist=75;
 
-        // If the robot has reached a wall
+        int stopDist=75;
+        // If the robot has reached a wall (reachedWall is global)
         if(sonarDist<=stopDist){
           reachedWall = true;
         }
@@ -218,7 +220,7 @@ void setup()
           PIDVy.SetMode(MANUAL);
           PIDW.SetMode(MANUAL);
           bool finished = mainController.InitForWall(frontAvg, rearAvg, pidOut);
-          if(finished){
+          if(finished){ // Robot has detect wall so use initForWall to rotate until finished
             pidOut[2] = 0;
             Serial.println("Halting Robot and going to Wall Follow");
             state=WALLFOLLOW;

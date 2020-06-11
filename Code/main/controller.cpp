@@ -31,15 +31,15 @@ Controller::Controller()
  */
 bool Controller::InitForWall(double frontIR, double backIR, double out[3])
 {
-  double IRDiffTol = 20;
-  double IRAvgTol = 200 ;
-  bool finished = ((abs(frontIR - backIR) < IRDiffTol) & (((frontIR+backIR)/2)<IRAvgTol));
+  double IRDiffTol = 20; //Difference between IR values
+  double IRAvgTol = 200 ; //Average between IR values
+  bool finished = ((abs(frontIR - backIR) < IRDiffTol) & (((frontIR+backIR)/2)<IRAvgTol)); 
   if(abs(frontIR - backIR) > IRDiffTol){
-    Serial.println("Failing the Diff condition");
+    Serial.println("Failing the difference condition");
     Serial.println(abs(frontIR - backIR));
   }
   if(((frontIR+backIR)/2)>IRAvgTol){
-    Serial.println("Failing the Avg condition");
+    Serial.println("Failing the average condition");
     Serial.println(((frontIR+backIR)/2));
   }
   out[0] = 0;
