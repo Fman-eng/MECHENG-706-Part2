@@ -95,7 +95,7 @@ void setup()
   while (1)
   {
     // ################ DELETE WHEN FINISHED ##################
-    state = FIRECHECK;
+    //state = FIRECHECK;
     //delay(100);
     // ########################################################
     frontAvg = IRFront.getAverage();
