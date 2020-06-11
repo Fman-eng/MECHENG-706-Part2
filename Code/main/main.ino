@@ -201,8 +201,11 @@ void setup()
         Serial.println(sonarDist);
 
         // If the robot has reached a wall
-        int stopDist=100;
+        int stopDist=60;
         if(sonarDist<=stopDist){
+          PIDVx.SetMode(MANUAL);
+          PIDVy.SetMode(MANUAL);
+          PIDW.SetMode(MANUAL);
           bool finished = mainController.InitForWall(frontAvg, rearAvg, pidOut);
           if(finished){
             Serial.println("Halting Robot and going to Wall Follow");
