@@ -157,42 +157,42 @@ void setup()
 
         break;
       }
-      case WALLIGNORE:
-      {
-        Serial.println("obstacle ignoring");
-        /* This sets the value of Vy and Wz in the velocities array by using the
-          IR sensors to meaure its distance and angle from the wall. The wall follow
-          is set to 145mm to account for the location of the IR sensorson the robot.
-          front detect is set to have the robot stop 40mm from the next wall*/
-        sonarDist = sonar.ping_cm()*10;
-        //sonarDist = sonar.getDistance();
-        Serial.println(sonarDist);
-        mainController.WallFollow(frontAvg, rearAvg, WALL_FOLLOW_DISTANCE, pidIn);
-        mainController.FrontDetect(sonarDist, WALL_STOP_DISTANCE, pidIn);
+      // case WALLIGNORE:
+      // {
+      //   Serial.println("obstacle ignoring");
+      //   /* This sets the value of Vy and Wz in the velocities array by using the
+      //     IR sensors to meaure its distance and angle from the wall. The wall follow
+      //     is set to 145mm to account for the location of the IR sensorson the robot.
+      //     front detect is set to have the robot stop 40mm from the next wall*/
+      //   sonarDist = sonar.ping_cm()*10;
+      //   //sonarDist = sonar.getDistance();
+      //   Serial.println(sonarDist);
+      //   mainController.WallFollow(frontAvg, rearAvg, WALL_FOLLOW_DISTANCE, pidIn);
+      //   mainController.FrontDetect(sonarDist, WALL_STOP_DISTANCE, pidIn);
 
-        /* Check if the PIDs need to be computed, the PIDs run at 50Hz which is
-          slower than the super loop. Every few loops the PIDs will be recalulated,
-          this ensures that the timestep stay constant prefencting issues with the
-          intergrator and derivitive term */
-        PIDVx.SetMode(AUTOMATIC);
-        PIDVy.SetMode(AUTOMATIC);
-        PIDW.SetMode(AUTOMATIC);
+      //   /* Check if the PIDs need to be computed, the PIDs run at 50Hz which is
+      //     slower than the super loop. Every few loops the PIDs will be recalulated,
+      //     this ensures that the timestep stay constant prefencting issues with the
+      //     intergrator and derivitive term */
+      //   PIDVx.SetMode(AUTOMATIC);
+      //   PIDVy.SetMode(AUTOMATIC);
+      //   PIDW.SetMode(AUTOMATIC);
 
-        /* Check if the next wall has been reached, Change the state to wallturn*/
-        if (sonarDist <= WALL_STOP_DISTANCE)
-        {
-          Serial.println("WALL DETECTED!");
-          state = WALLTURN;
-        }
+      //   /* Check if the next wall has been reached, Change the state to wallturn*/
+      //   if (sonarDist <= WALL_STOP_DISTANCE)
+      //   {
+      //     Serial.println("WALL DETECTED!");
+      //     state = WALLTURN;
+      //   }
 
-        if (obsRearAvg <= OBS_DETECT_DISTANCE)
-        {
-          Serial.println("OBSTACLE DETECTED!");
-          Serial.println(obsRearAvg);
-          state = WALLFOLLOW;
-        }
+      //   if (obsRearAvg <= OBS_DETECT_DISTANCE)
+      //   {
+      //     Serial.println("OBSTACLE DETECTED!");
+      //     Serial.println(obsRearAvg);
+      //     state = WALLFOLLOW;
+      //   }
 
-        break;
+      //   break;
       }
       case FIRECHECK:
       {
@@ -320,7 +320,7 @@ void setup()
           pidOut[1] = -5000;
         } else{
           pidOut[1] = 0;
-          state = WALLIGNORE;
+          state = WALLFOLLOW;
         }
         break;
       }
