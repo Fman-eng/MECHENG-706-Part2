@@ -1,9 +1,3 @@
-
-#ifndef SonarSensor_h
-#define SonarSensor_h
-
-#include "Arduino.h"
-
 /*
   SonarSensor.h - A source file for the sonar sensor class for an arduino based robot.
   Group 2: Freeman Porten, Lachlan Barnes, Jake Olliff, Calvin Lee
@@ -12,6 +6,13 @@
   It handles all of the calculations of distance so the user only needs to make one function call
   to get a distance reading from the sonar sensor
 */
+
+#ifndef SonarSensor_h
+#define SonarSensor_h
+
+#include "Arduino.h"
+
+
 class SonarSensor
 {
 public:

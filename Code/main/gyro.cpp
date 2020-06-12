@@ -1,6 +1,18 @@
+/*
+  gyro.cpp - Library for a the gyroscope of a arduino based robot.
+  Group 2: Freeman Porten, Lachlan Barnes, Jake Olliff, Calvin Lee
+
+  gyro is a class used to control and take readings from a single 
+  axis, analog gyroscope.  
+*/
+
+
 #include "Arduino.h"
 #include "Gyro.h"
 
+//Gyro class constructor. Inputs the analog input pin the gyro is connected to, 
+//a measured ADCOffset to account for drift and the sensitivity of the gyro chip
+//measured in volts/degree
 Gyro::Gyro(uint8_t pin, float ADCOffset, float sensitivity)
 {
     _pin = pin;
@@ -17,7 +29,9 @@ Gyro::Gyro(uint8_t pin, float ADCOffset, float sensitivity)
     ringBufferIndex = 0;
 }
 
-
+//gyroUpdate returns the current angle from the gyro. Must be called as often as possible
+//as this method is responsible for integration of angular acceleration values. If not
+//called often enough the gyro will become inaccurate and unpredictable.
 float Gyro::gyroUpdate(){
     newMillis = micros();
     float gyroRate = analogRead(_pin);
@@ -41,20 +55,17 @@ float Gyro::gyroUpdate(){
 
     ringBufferIndex = (ringBufferIndex + 1)%10;
     oldMillis = newMillis;
-    //Serial.print("Angle=");
-    //Serial.println(currentAngle);
+
     if(currentAngle < 0){
         currentAngle = 0;
     }
     
     return currentAngle;
-    
-
-
 }
 
 
-
+//gyroReset resets the angle and the ring buffer inside the gyro class
+//Call this when taking restarting rotation readings for the most accurate results
 void Gyro::gyroReset(){
     for(int i = 0; i < 10; i++){
         gyroRates[i] = 0;
