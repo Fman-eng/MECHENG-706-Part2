@@ -1,3 +1,11 @@
+/*
+  gyro.h - Library for a the gyroscope of a arduino based robot.
+  Group 2: Freeman Porten, Lachlan Barnes, Jake Olliff, Calvin Lee
+
+  gyro is a class used to control and take readings from a single 
+  axis, analog gyroscope. 
+*/
+
 #ifndef Gyro_h
 #define Gyro_h
 
