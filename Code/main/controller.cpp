@@ -96,23 +96,46 @@ void Controller::FrontDetect(double sonar, double targetDistance, double out[3])
   return;
 }
 
+/**
+ * Scan distances around the robot 
+ * 
+ * While the robot is rotate take the angle the robot is at 
+ * and the distance of the object ahead of the robot and 
+ * store the distance value in an array using the angle as the 
+ * array index
+ */
+
 void Controller::GapScan(double Range[359], int angle, double distance)
 {
   Range[angle] = distance;
 }
 
+/**
+ * Fill in any hole in the gap array
+ * 
+ * Checks for zero values in the array and fills it in depending
+ * on what values are in the adjacent indexes. The array may need to 
+ * be passed through a few times to remove all the holes.
+ */
+
 void Controller::GapFill(double Range[359])
 {
+  // For each value in the array
   for (int i = 0; i < 359; ++i)
   {
+    // Check if it is zero
     if (Range[i] == 0)
     {
+      // Check if it is a fringe case
       if (i == 0)
       {
+        // Check if a change in surface occured 
+        // If yes copy the value accross 
         if ((Range[359]-Range[1]) > 20)
         {
           Range[i] = Range[1];
         }
+        // If not a change in surface take an average 
         else
         {
           Range[i] = (Range[359]+Range[1])/2;
@@ -120,10 +143,13 @@ void Controller::GapFill(double Range[359])
       }
       else if (i == 359)
       {
+        // Check if a change in surface occured 
+        // If yes copy the value accross
         if ((Range[359]-Range[1]) > 20)
         {
           Range[i] = Range[1];
         }
+        // If not a change in surface take an average
         else
         {
           Range[i] = (Range[0]+Range[358])/2;
@@ -131,10 +157,13 @@ void Controller::GapFill(double Range[359])
       }
       else
       {
+        // Check if a change in surface occured 
+        // If yes copy the value accross
         if ((Range[i-1]-Range[i+1]) > 20)
         {
           Range[i] = Range[i+1];
         }
+        // If not a change in surface take an average
         else
         {
           Range[i] = (Range[i-1]+Range[i+1])/2;
@@ -143,6 +172,11 @@ void Controller::GapFill(double Range[359])
     }
   }
 }
+
+/**
+ * Processes the array and finds the largest gap size returning
+ * the best angle to turn at.
+ */
 
 
 int Controller::GapDetect(double Range[359])
@@ -157,14 +191,17 @@ int Controller::GapDetect(double Range[359])
   int adjacentIndex;
   for (int i = 0; i < 719; ++i)
   {
-    // Check if the range is +- 20cm of the last reading 
     index = i%360;
     adjacentIndex = ((i + 1)%360);
 
-    // if ((Range[index] < (Range[adjacentIndex] + 200)) && (Range[index] > (Range[adjacentIndex] - 200)))
+    // Check if the range is +- 20cm of the last reading 
     if(abs(Range[index] - Range[adjacentIndex]) < 200)
     {
+      // If we are still scanning the same surface increment the gap size
       gap = gap + 1;
+
+      // If the gap is larger than the largest gap it now becomes the 
+      // largest gap. 
       if (gap > largestGap )
       {
         largestGap = gap;
@@ -173,6 +210,7 @@ int Controller::GapDetect(double Range[359])
       }
       gapEnd = i;
     }
+    // If a new surface is detected reset the gap size
     else
     {
       gap = 1;
@@ -180,6 +218,7 @@ int Controller::GapDetect(double Range[359])
     }
   }
 
+  // Calculate the angle in the middle of the largest gap
   int turnTo = ((largestGap/2) + largestGapStart)%360;
 
   return turnTo; 
