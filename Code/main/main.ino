@@ -275,44 +275,6 @@ void setup()
         }
         break;
       }
-      case WALLIGNORE:
-      {
-        Serial.println("obstacle ignoring");
-        /* This sets the value of Vy and Wz in the velocities array by using the
-          IR sensors to meaure its distance and angle from the wall. The wall follow
-          is set to 145mm to account for the location of the IR sensorson the robot.
-          front detect is set to have the robot stop 40mm from the next wall*/
-        sonarDist = sonar.ping_cm()*10;
-        //sonarDist = sonar.getDistance();
-        Serial.println(sonarDist);
-        mainController.WallFollow(frontAvg, rearAvg, WALL_FOLLOW_DISTANCE, pidIn);
-        mainController.FrontDetect(sonarDist, WALL_STOP_DISTANCE, pidIn);
-
-        /* Check if the PIDs need to be computed, the PIDs run at 50Hz which is
-          slower than the super loop. Every few loops the PIDs will be recalulated,
-          this ensures that the timestep stay constant prefencting issues with the
-          intergrator and derivitive term */
-        PIDVx.SetMode(AUTOMATIC);
-        PIDVy.SetMode(AUTOMATIC);
-        PIDW.SetMode(AUTOMATIC);
-
-        /* Check if the next wall has been reached, Change the state to wallturn*/
-        int stoppingDist = 100;
-        if (sonarDist <= stoppingDist)
-        {
-          Serial.println("WALL DETECTED!");
-          state = WALLTURN;
-        }
-
-        if ((obsRearAvg >= OBS_DETECT_DISTANCE) && (obsFrontAvg >= OBS_DETECT_DISTANCE))
-        {
-          Serial.println("OBSTACLE DETECTED!");
-          Serial.println(obsRearAvg);
-          state = WALLFOLLOW;
-        }
-
-        break;
-      }
       case FIRECHECK:
       {
         Serial.println("firecheck");
@@ -354,7 +316,7 @@ void setup()
       }
       case FIREAPPROCH:
       {
-        // Serial.println("fireapproach");
+        Serial.println("fireapproach");
         PIDVx.SetMode(MANUAL);
         PIDVy.SetMode(MANUAL);
         PIDW.SetMode(MANUAL);
@@ -367,7 +329,6 @@ void setup()
 
         pidOut[0] = 0;
         if((obsFrontAvg < stopDist) || (obsRearAvg < stopDist)){
-        //if(avgIR <= stopDist){
           pidOut[0]=0;
           pidOut[1]=0;
           pidOut[2]=0;
@@ -377,21 +338,13 @@ void setup()
         }
         pidOut[2] = 0;
 
-        if((diffIR < tolerance) & (avgIR < distToWall)){
-        // Both IR's detect a obstical
-          // Serial.println("Both sensors detected an obstical");
-        } else if((diffIR < tolerance) & (avgIR > distToWall)){
-        // None detect
-          // Serial.println("Neither sensors detected an obstical");
-        } else if(diffIR > tolerance){
+        if(diffIR > tolerance){
           // An obstical detected
           if(obsFrontAvg < obsRearAvg){
           // The LHS IR sensor has detected an objected
-            // Serial.println("LHS sensor detected an obstical");
             pidOut[0] = 3000;
           } else if(obsRearAvg < obsFrontAvg){
           // The RHS IR sensor has detected an objected
-            // Serial.println("RHS sensor detected an obstical");
             pidOut[0] = -3000;
           }
         }
@@ -429,7 +382,7 @@ void setup()
           pidOut[1] = -5000;
         } else{
           pidOut[1] = 0;
-          state = WALLIGNORE;
+          state = WALLFOLLOW;
         }
         break;
       }
@@ -454,6 +407,7 @@ void setup()
         PIDVy.SetMode(MANUAL);
         PIDW.SetMode(MANUAL);
         drive.DisableMotors();
+        Serial.println("Shout out Peter Xu for the mint project!");
         break;
       }
       default:
