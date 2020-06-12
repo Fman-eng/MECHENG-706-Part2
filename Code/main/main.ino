@@ -23,7 +23,7 @@ enum State{
   WALLFOLLOW,
   WALLIGNORE,
   FIRECHECK,
-  FIREAPPROCH,
+  FIREAPPROACH,
   FIREEXTINGUISH,
   WALLRETURN,
   WALLTURN,
@@ -311,7 +311,7 @@ void setup()
         Serial.println(pt.FireDetected(FIRE_THRESHHOLD)); 
         if(pt.FireDetected(FIRE_THRESHHOLD)){
           Serial.println("FIRE DETECTED!");
-          state = FIREAPPROCH;
+          state = FIREAPPROACH;
         } else if ((obsFrontAvg >= OBS_DETECT_DISTANCE) && (obsRearAvg >= OBS_DETECT_DISTANCE) )
         {
           Serial.println("OBSTACLE Passed!");
@@ -321,7 +321,7 @@ void setup()
 
         break;
       }
-      case FIREAPPROCH:
+      case FIREAPPROACH:
       {
         // If a fire is present, drive toward the fire so it can be extinguished
         Serial.println("fireapproach");
