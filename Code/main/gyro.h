@@ -3,7 +3,7 @@
   Group 2: Freeman Porten, Lachlan Barnes, Jake Olliff, Calvin Lee
 
   gyro is a class used to control and take readings from a single 
-  axis, analog gyroscope. 
+  axis, analog gyroscope.  
 */
 
 #ifndef Gyro_h
