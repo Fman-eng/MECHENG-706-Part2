@@ -323,7 +323,7 @@ void setup()
 
         int distToWall =  50;
         int tolerance = 20;
-        int stopDist = 20;
+        int stopDist = 30;
         int diffIR = abs(obsFrontAvg - obsRearAvg);
         int avgIR = (obsFrontAvg + obsRearAvg)/2;
 
@@ -338,6 +338,8 @@ void setup()
         }
         pidOut[2] = 0;
 
+        /* If one of the IR sensors cannot detect the fire obstacle move the robot in the x direction
+        so that both IR sensors can detect the obstact again*/
         if(diffIR > tolerance){
           // An obstical detected
           if(obsFrontAvg < obsRearAvg){
@@ -348,6 +350,11 @@ void setup()
             pidOut[0] = -3000;
           }
         }
+        else // Drive straight towards the fire obstacle
+        {
+          pidOut[0] = 0;
+        }
+        
         break;
       }
       case FIREEXTINGUISH:
