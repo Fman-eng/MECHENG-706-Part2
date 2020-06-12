@@ -1,3 +1,5 @@
 {
-    "programmer": "Arduino as ISP"
+    "programmer": "ArduinoISP",
+    "board": "arduino:avr:megaADK",
+    "sketch": "main.ino"
 }

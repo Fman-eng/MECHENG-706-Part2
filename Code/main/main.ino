@@ -193,14 +193,16 @@ void setup()
       }
       case CRUISEMOTION:
       {
-        """ This function drives to a wall, rotates until it detect it is parrallel
-            with a wall and then enters wall follow. """
+        /*This function drives to a wall, rotates until it detect it is parrallel
+            with a wall and then enters wall follow. */
         Serial.print("Executing Cruise Motion");
 
         // Set PID values
         PIDVx.SetMode(AUTOMATIC);
         PIDVy.SetMode(AUTOMATIC);
         PIDW.SetMode(AUTOMATIC);
+        pidIn[0] = 0;
+        pidIn[1] = 0;
 
         // Get the sonar value
         int sonarDist = sonar.ping_cm()*10;
@@ -221,7 +223,7 @@ void setup()
           PIDW.SetMode(MANUAL);
           bool finished = mainController.InitForWall(frontAvg, rearAvg, pidOut);
           if(finished){ // Robot has detect wall so use initForWall to rotate until finished
-            pidOut[2] = 0;
+            pidOut[1] = 0;
             Serial.println("Halting Robot and going to Wall Follow");
             state=WALLFOLLOW;
           }
@@ -408,18 +410,14 @@ void setup()
         delay(10000);
         digitalWrite(12, LOW);
         fireCount++;
-        if(fireCount >= 2) state = COMPLETE;
+        if(fireCount >= 2){
+          state = COMPLETE;
+        }
+        else{
         state=WALLRETURN;
+        }
         break;
 
-        // if(pt.FireDetected(FIRE_THRESHHOLD)){
-        //   int timer;
-        //   digitalWrite(12,HIGH);
-        // }
-        // else{
-        //   state = WALLFOLLOW;
-        // }
-        // break;
       }
       case WALLRETURN:
       {
