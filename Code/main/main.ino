@@ -120,6 +120,9 @@ void setup()
       case INITALIZE:
       {
         //Intilisation code
+        // 
+        // Scans the area around the robot to find where the wall and obstacles are
+        // Finds a gap in the obstacles and turns to face the gap
         //Serial.println("Intialising");
 
         // Initialise gyroAngle to store the gyro value
@@ -235,6 +238,8 @@ void setup()
       }
       case WALLFOLLOW:
       {
+        // Drives along side the wall checking for obstacles. 
+
         bool frontDect = false;
         Serial.println("wall following");
         /* This sets the value of Vy and Wz in the velocities array by using the
@@ -277,6 +282,8 @@ void setup()
       }
       case FIRECHECK:
       {
+        // When an obstacle is detected check to see if it is also a fire. 
+
         Serial.println("firecheck");
         /* This sets the value of Vy and Wz in the velocities array by using the
           IR sensors to meaure its distance and angle from the wall. The wall follow
@@ -316,6 +323,7 @@ void setup()
       }
       case FIREAPPROCH:
       {
+        // If a fire is present, drive toward the fire so it can be extinguished
         Serial.println("fireapproach");
         PIDVx.SetMode(MANUAL);
         PIDVy.SetMode(MANUAL);
@@ -359,6 +367,10 @@ void setup()
       }
       case FIREEXTINGUISH:
       {
+        // Stop in front of the fire 
+        // Turn on the fan to put out the fire 
+        // Record a fire has been extinguished
+
         // Set motor values to zero
         pidOut[0] = 0;
         pidOut[1] = 0;
@@ -381,6 +393,8 @@ void setup()
       }
       case WALLRETURN:
       {
+        // Return back to the wall to continue wall following
+
         Serial.println("wallreturn");
         PIDVx.SetMode(MANUAL);
         PIDVy.SetMode(MANUAL);
