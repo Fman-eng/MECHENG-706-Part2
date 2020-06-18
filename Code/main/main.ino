@@ -14,8 +14,8 @@
 
 #define WALL_FOLLOW_DISTANCE 165
 #define WALL_STOP_DISTANCE 70
-#define OBS_DETECT_DISTANCE 600
-#define FIRE_THRESHHOLD 20
+#define OBS_DETECT_DISTANCE 450
+#define FIRE_THRESHOLD 500
 
 enum State{
   INITALIZE,
@@ -46,20 +46,20 @@ double Ranges[359] = {0};
 // Setup PID controller instances
 PID PIDVx(&pidIn[0], &pidOut[0], &setPoints[0], 100, 0, 0, REVERSE);
 PID PIDVy(&pidIn[1], &pidOut[1], &setPoints[1], 300, 0, 0, REVERSE);
-PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 400, 0, 0, REVERSE);
+PID PIDW(&pidIn[2], &pidOut[2], &setPoints[2], 500, 150, 0, REVERSE);
 
 void setup()
 {
   Serial.begin(9600);
   delay(1000);
-  Phototransistors pt(A9, A10, A8, A8);
+  Phototransistors pt(A9, A10);
   pinMode(12, OUTPUT);
 
   /* These prevent Intergrator windup by stoping the intergrator summing
   if the output goes outside of the range specified below. */
   PIDVx.SetOutputLimits(-8000, 8000);
   PIDVy.SetOutputLimits(-8000, 8000);
-  PIDW.SetOutputLimits(-4000, 4000);
+  PIDW.SetOutputLimits(-4000, 7000);
 
   /* Begin the PIDs in manual mode as we start with Open-loop control
   to find the starting wall. */
@@ -115,7 +115,6 @@ void setup()
     obsFrontAvg = OIRFront.getAverage()*10; 
     obsRearAvg = OIRBack.getAverage()*10;
 
-
     switch(state){
       case INITALIZE:
       {
@@ -143,7 +142,7 @@ void setup()
         {
             pidOut[0] = 0;
             pidOut[1] = 0;
-            pidOut[2] = -100;
+            pidOut[2] = -150;
             gyroAngle = round(gyro.gyroUpdate());
             Serial.println(gyroAngle);
             int distance = sonar.ping_cm()*10;
@@ -181,7 +180,7 @@ void setup()
         {
             pidOut[0] = 0;
             pidOut[1] = 0;
-            pidOut[2] = -100;
+            pidOut[2] = -150;
             Serial.println("Stuck 1");
 
         } else {
@@ -209,12 +208,7 @@ void setup()
 
         // Get the sonar value
         int sonarDist = sonar.ping_cm()*10;
-
-        Serial.print(frontAvg);
-        Serial.print(", ");
-        Serial.println(rearAvg);
-
-        int stopDist=75;
+        int stopDist=110;
         // If the robot has reached a wall (reachedWall is global)
         if(sonarDist<=stopDist){
           reachedWall = true;
@@ -240,7 +234,6 @@ void setup()
       {
         // Drives along side the wall checking for obstacles. 
 
-        bool frontDect = false;
         Serial.println("wall following");
         /* This sets the value of Vy and Wz in the velocities array by using the
           IR sensors to meaure its distance and angle from the wall. The wall follow
@@ -265,18 +258,9 @@ void setup()
         {
           Serial.println("WALL DETECTED!");
           state = WALLTURN;
-        }
-
-        if (obsFrontAvg <= OBS_DETECT_DISTANCE)
+        } else if (obsRearAvg <= OBS_DETECT_DISTANCE)
         {
-          frontDect = true;
-          Serial.println("OBSTACLE DETECTED!");
-          Serial.println(obsRearAvg);
-        } else if(obsRearAvg <= OBS_DETECT_DISTANCE){
-          frontDect = false;
-        }
-        if(frontDect){
-          state = FIRECHECK;
+           state = FIRECHECK;
         }
         break;
       }
@@ -284,7 +268,7 @@ void setup()
       {
         // When an obstacle is detected check to see if it is also a fire. 
 
-        Serial.println("firecheck");
+        //Serial.println("firecheck");
         /* This sets the value of Vy and Wz in the velocities array by using the
           IR sensors to meaure its distance and angle from the wall. The wall follow
           is set to 145mm to account for the location of the IR sensorson the robot.
@@ -304,18 +288,17 @@ void setup()
         /* Check if the next wall has been reached, Change the state to wallturn*/
         if (sonarDist <= WALL_STOP_DISTANCE)
         {
-          Serial.println("WALL DETECTED!");
           state = WALLTURN;
         }
+        Serial.print(obsRearAvg);
+        Serial.print(",");
+        Serial.println(obsFrontAvg);
         
-        Serial.println(pt.FireDetected(FIRE_THRESHHOLD)); 
-        if(pt.FireDetected(FIRE_THRESHHOLD)){
-          Serial.println("FIRE DETECTED!");
+        if(pt.FireDetected(FIRE_THRESHOLD)){
           state = FIREAPPROACH;
         } else if ((obsFrontAvg >= OBS_DETECT_DISTANCE) && (obsRearAvg >= OBS_DETECT_DISTANCE) )
         {
-          Serial.println("OBSTACLE Passed!");
-          Serial.println(obsRearAvg);
+          //Serial.println(obsRearAvg);
           state = WALLFOLLOW;
         }
 
@@ -330,8 +313,8 @@ void setup()
         PIDW.SetMode(MANUAL);
 
         int distToWall =  50;
-        int tolerance = 20;
-        int stopDist = 30;
+        int tolerance = 30;
+        int stopDist = 15;
         int diffIR = abs(obsFrontAvg - obsRearAvg);
         int avgIR = (obsFrontAvg + obsRearAvg)/2;
 
@@ -342,19 +325,22 @@ void setup()
           pidOut[2]=0;
           state=FIREEXTINGUISH;
         } else {
-          pidOut[1] = 8000;
+          pidOut[1] = 6000;
         }
         pidOut[2] = 0;
 
         /* If one of the IR sensors cannot detect the fire obstacle move the robot in the x direction
         so that both IR sensors can detect the obstact again*/
         if(diffIR > tolerance){
+          // Don't drive in
+          pidOut[1]=0;
+          
           // An obstical detected
           if(obsFrontAvg < obsRearAvg){
-          // The LHS IR sensor has detected an objected
+          // The LHS IR sensor has detected an objected, drive forward
             pidOut[0] = 3000;
           } else if(obsRearAvg < obsFrontAvg){
-          // The RHS IR sensor has detected an objected
+          // The RHS IR sensor has detected an objected, drive backwards
             pidOut[0] = -3000;
           }
         }

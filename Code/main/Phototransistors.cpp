@@ -15,17 +15,15 @@
  * sets the pin direction on the arduino. Also takes a boolean value to distinguish the model values, true uses
  * calibration values of sensor one, false uses calibration values for sensor two.
  */
-Phototransistors::Phototransistors(uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4)
+Phototransistors::Phototransistors(uint8_t pin1, uint8_t pin2)
 {
     this->ptPin1Active = pin1;
     this->ptPin2Active = pin2;
-    this->ptPin1Ambient= pin3;
-    this->ptPin2Ambient = pin4;
 }
 
 bool Phototransistors::FireDetected(int threshold){
-  int activeReading1 = 0;
-  int activeReading2 = 0;
+  float activeReading1 = 0;
+  float activeReading2 = 0;
 
   for(int i = 0; i < 10; i++){
     activeReading1 += analogRead(this->ptPin1Active);
@@ -34,7 +32,9 @@ bool Phototransistors::FireDetected(int threshold){
   
   activeReading1 = activeReading1/10;
   activeReading2 = activeReading2/10;
-
+ // Serial.print(((activeReading1+activeReading2)/2));
+ // Serial.print(',');
+ // Serial.println(threshold);
   return ((activeReading1+activeReading2)/2 > threshold);
 }
   /**

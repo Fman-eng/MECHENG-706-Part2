@@ -1,5 +1,6 @@
 {
-    "programmer": "ArduinoISP",
+    "programmer": "AVR ISP",
     "board": "arduino:avr:megaADK",
-    "sketch": "main.ino"
+    "sketch": "main.ino",
+    "port": "COM1"
 }
